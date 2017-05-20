@@ -1,3 +1,6 @@
 defmodule Game.Model do
-  defstruct players: []
+  @deck List.duplicate 0, 104
+
+  defstruct players: [], hands: [], deck: @deck
+
 end

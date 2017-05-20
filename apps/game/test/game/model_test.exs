@@ -3,11 +3,20 @@ defmodule Game.ModelTest do
 
   alias Game.Model
 
-  describe "model defaults" do
-    test "a model is initialized with an empty list of players" do
+  describe "a model is initialized with" do
+    test "an empty list of players" do
       model = %Model{}
       assert model.players == []
     end
 
+    test "an empty list of hands" do
+      model = %Model{}
+      assert model.hands == []
+    end
+
+    test "a deck of 104 cards" do
+      model = %Model{}
+      assert length(model.deck) == 104
+    end
   end
 end

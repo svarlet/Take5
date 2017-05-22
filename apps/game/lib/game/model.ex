@@ -3,4 +3,7 @@ defmodule Game.Model do
 
   defstruct players: [], hands: [], deck: @deck
 
+  defmodule Card do
+    defstruct [:number, :penalty]
+  end
 end

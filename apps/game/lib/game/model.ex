@@ -9,7 +9,7 @@ defmodule Game.Model do
           end
         end)
 
-  defstruct players: [], hands: [], deck: @deck
+  defstruct players: [], hands: [], table: [], deck: @deck
 
   defmodule Card do
     defstruct [:number, :penalty]

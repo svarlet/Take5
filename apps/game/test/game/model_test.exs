@@ -25,6 +25,11 @@ defmodule Game.ModelTest do
       assert model.hands == []
     end
 
+    test "an empty table" do
+      model = %Model{}
+      assert model.table == []
+    end
+
     test "a deck of 104 cards" do
       model = %Model{}
       assert Enum.count(model.deck) == 104

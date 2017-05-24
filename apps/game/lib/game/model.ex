@@ -1,5 +1,5 @@
 defmodule Game.Model do
-  @deck (for n <- 1..104, into: %{} do
+  @deck (for n <- 1..104, into: MapSet.new do
           cond do
             n == 55 -> {55, 7}
             rem(n, 5) == 0 && rem(n, 10) != 0 -> {n, 2}

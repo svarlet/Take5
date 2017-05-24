@@ -9,7 +9,34 @@ defmodule Game.Model do
           end
         end)
 
-  defstruct players: [], hands: [], table: [], deck: @deck
+  defstruct players: MapSet.new, hands: [], table: [], deck: @deck
+
+  def add_player(model, player) do
+    cond do
+      MapSet.member?(model.players, player) ->
+        {:error, {:already_participating, model}}
+      Enum.count(model.players) >= 10 ->
+        {:error, {:at_capacity, model}}
+      true ->
+        {:ok, %__MODULE__{model | players: MapSet.put(model.players, player)}}
+    end
+  end
+
+  def has_player?(model, player) do
+    Enum.member?(model.players, player)
+  end
+
+  def remove_player(model, player) do
+    if MapSet.member?(model.players, player) do
+      {:ok, %__MODULE__{model | players: MapSet.delete(model.players, player)}}
+    else
+      {:error, {:not_participating, model}}
+    end
+  end
+
+  def count_players(model) do
+    Enum.count(model.players)
+  end
 
   defmodule Card do
     defstruct [:number, :penalty]

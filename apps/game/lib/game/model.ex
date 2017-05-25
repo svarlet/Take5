@@ -9,7 +9,7 @@ defmodule Game.Model do
           end
         end)
 
-  defstruct players: MapSet.new, hands: [], table: [], deck: @deck
+  defstruct status: :init, players: MapSet.new, hands: [], table: [], deck: @deck
 
   def add_player(model, player) do
     cond do
@@ -36,6 +36,14 @@ defmodule Game.Model do
 
   def count_players(model) do
     Enum.count(model.players)
+  end
+
+  def start(model) do
+    if count_players(model) >= 2 do
+      {:ok, %__MODULE__{model | status: :started}}
+    else
+      {:error, {:not_enough_players, model}}
+    end
   end
 
   defmodule Card do

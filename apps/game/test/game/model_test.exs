@@ -21,6 +21,10 @@ defmodule Game.ModelTest do
   describe "a model is initialized with" do
     setup [:create_model]
 
+    test "a status set to :init", context do
+      assert context.model.status == :init
+    end
+
     test "0 players", context do
       assert Enum.count(context.model.players) == 0
     end
@@ -101,6 +105,25 @@ defmodule Game.ModelTest do
         assert {:error, {:at_capacity, ^model}} = Model.add_player(model, "player11")
       else
         _ -> flunk "Registration of 10 users failed."
+      end
+    end
+  end
+
+  describe "Starting a game" do
+    test "fails when there are fewer than 2 participants" do
+      model = %Model{}
+      assert {:error, {:not_enough_players, ^model}} = Model.start(model)
+
+      {:ok, model} = Model.add_player(model, "player1")
+      assert {:error, {:not_enough_players, ^model}} = Model.start(model)
+    end
+
+    test "update `status` when there are 2+ participants" do
+      with model <- %Model{},
+           {:ok, model} <- Model.add_player(model, "player1"),
+           {:ok, model} <- Model.add_player(model, "player2") do
+        assert {:ok, model} = Model.start(model)
+        assert model.status == :started
       end
     end
   end

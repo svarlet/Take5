@@ -46,6 +46,10 @@ defmodule Game.Model do
     end
   end
 
+  def deal(model) do
+    {:error, {:not_started, model}}
+  end
+
   defmodule Card do
     defstruct [:number, :penalty]
   end

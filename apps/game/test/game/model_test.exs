@@ -118,13 +118,20 @@ defmodule Game.ModelTest do
       assert {:error, {:not_enough_players, ^model}} = Model.start(model)
     end
 
-    test "update `status` when there are 2+ participants" do
+    test "update `status` if there are 2+ participants" do
       with model <- %Model{},
            {:ok, model} <- Model.add_player(model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2") do
         assert {:ok, model} = Model.start(model)
         assert model.status == :started
       end
+    end
+  end
+
+  describe "Dealing the cards" do
+    test "fails when game is not started" do
+      model = %Model{}
+      assert {:error, {:not_started, ^model}} = Model.deal(model)
     end
   end
 

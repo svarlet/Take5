@@ -50,10 +50,9 @@ defmodule Game.Model do
 
   def deal(model) do
     if model.status == :started do
-      a_hand = List.duplicate 0, 10
-      hands = for player <- model.players, into: Map.new do
-        {player, a_hand}
-      end
+      hands = model.players
+      |> Enum.zip(Enum.chunk(model.deck, 10))
+      |> Map.new(&(&1))
       {:ok, %__MODULE__{model | hands: hands}}
     else
       {:error, {:not_started, model}}

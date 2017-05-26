@@ -174,6 +174,18 @@ defmodule Game.ModelTest do
         error -> flunk "Dealing the cards failed. (reason: #{inspect error})"
       end
     end
-  end
 
+    test "should provide different hands in different games" do
+      with model <- %Model{},
+           {:ok, model} <- Model.add_player(model, "player1"),
+           {:ok, model} <- Model.add_player(model, "player2"),
+           {:ok, model} <- Model.start(model) do
+        {:ok, %Model{hands: hands_A}} = Model.deal(model)
+        {:ok, %Model{hands: hands_B}} = Model.deal(model)
+        assert hands_A != hands_B
+      else
+        error -> flunk "Game did not start successfully. (reason: #{inspect error})"
+      end
+    end
+  end
 end

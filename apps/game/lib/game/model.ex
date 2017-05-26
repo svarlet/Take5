@@ -50,10 +50,12 @@ defmodule Game.Model do
 
   def deal(model) do
     if model.status == :started do
+      shuffled_deck = Enum.shuffle(model.deck)
+      unassigned_hands = Stream.chunk(shuffled_deck, 10)
       hands = model.players
-      |> Enum.zip(Enum.chunk(model.deck, 10))
-      |> Map.new(&(&1))
-      {:ok, %__MODULE__{model | hands: hands}}
+      |> Stream.zip(unassigned_hands)
+      |> Enum.into(Map.new)
+      {:ok, %__MODULE__{model | hands: hands, deck: shuffled_deck}}
     else
       {:error, {:not_started, model}}
     end

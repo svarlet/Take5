@@ -52,7 +52,7 @@ defmodule Game.Model do
       hands = for player <- model.players, into: Map.new do
         {player, a_hand}
       end
-      %__MODULE__{model | hands: hands}
+      {:ok, %__MODULE__{model | hands: hands}}
     else
       {:error, {:not_started, model}}
     end

@@ -73,7 +73,7 @@ defmodule Game.ModelTest do
            {:ok, model} <- Model.remove_player(model, "player1") do
         refute Model.has_player?(model, "player1")
       else
-        _ -> flunk "Adding then removing a player failed."
+        error -> flunk "Adding then removing a player failed. (reason: #{inspect error})"
       end
     end
 
@@ -83,7 +83,7 @@ defmodule Game.ModelTest do
         assert Model.has_player?(model, "player1")
         assert {:error, {:already_participating, ^model}} = Model.add_player(model, "player1")
       else
-        _ -> flunk("Could not register player1")
+        error -> flunk("Could not register player1. (reason: #{inspect error})")
       end
     end
 
@@ -104,7 +104,7 @@ defmodule Game.ModelTest do
         end
         assert {:error, {:at_capacity, ^model}} = Model.add_player(model, "player11")
       else
-        _ -> flunk "Registration of 10 users failed."
+        error -> flunk "Registration of 10 users failed. (reason: #{inspect error})"
       end
     end
   end
@@ -124,6 +124,8 @@ defmodule Game.ModelTest do
            {:ok, model} <- Model.add_player(model, "player2") do
         assert {:ok, model} = Model.start(model)
         assert model.status == :started
+      else
+        error -> flunk "Could not start the game successfully. (reason: #{inspect error})"
       end
     end
   end
@@ -139,11 +141,28 @@ defmodule Game.ModelTest do
            {:ok, model} <- Model.add_player(model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model) do
-        all_hands = Model.deal(model).hands
+        {:ok, %Model{hands: all_hands}} = Model.deal(model)
         assert Enum.count(all_hands) == 2
         assert Enum.all?(all_hands, fn {_player, hand} -> Enum.count(hand) == 10 end)
       else
-        _ -> flunk "Game could not start."
+        error -> flunk "Game could not start. (reason: #{inspect error})"
+      end
+    end
+
+    test "deals distinct cards" do
+      with model <- %Model{},
+           {:ok, model} <- Model.add_player(model, "player1"),
+           {:ok, model} <- Model.add_player(model, "player2"),
+           {:ok, model} <- Model.start(model),
+           {:ok, model} <- Model.deal(model) do
+        dealt_cards = model.hands
+        |> Enum.flat_map(fn {_player, hand} -> hand end)
+        |> IO.inspect
+        |> Enum.uniq
+        |> IO.inspect
+        assert Enum.count(dealt_cards) == 20
+      else
+        error -> flunk "Dealing the cards failed. (reason: #{inspect error})"
       end
     end
   end

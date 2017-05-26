@@ -13,6 +13,8 @@ defmodule Game.Model do
 
   def add_player(model, player) do
     cond do
+      model.status == :started ->
+        {:error, {:game_has_already_started, model}}
       MapSet.member?(model.players, player) ->
         {:error, {:already_participating, model}}
       Enum.count(model.players) >= 10 ->

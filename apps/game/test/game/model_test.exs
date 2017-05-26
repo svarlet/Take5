@@ -107,6 +107,17 @@ defmodule Game.ModelTest do
         error -> flunk "Registration of 10 users failed. (reason: #{inspect error})"
       end
     end
+
+    test "fails when game has already started" do
+      with model <- %Model{},
+           {:ok, model} <- Model.add_player(model, "player1"),
+           {:ok, model} <- Model.add_player(model, "player2"),
+           {:ok, model} <- Model.start(model) do
+        assert {:error, {:game_has_already_started, ^model}} = Model.add_player(model, "player3")
+      else
+        error -> flunk "Failed to start the game. (reason: #{inspect error})"
+      end
+    end
   end
 
   describe "Starting a game" do
@@ -157,9 +168,7 @@ defmodule Game.ModelTest do
            {:ok, model} <- Model.deal(model) do
         dealt_cards = model.hands
         |> Enum.flat_map(fn {_player, hand} -> hand end)
-        |> IO.inspect
         |> Enum.uniq
-        |> IO.inspect
         assert Enum.count(dealt_cards) == 20
       else
         error -> flunk "Dealing the cards failed. (reason: #{inspect error})"

@@ -29,8 +29,8 @@ defmodule Game.ModelTest do
       assert Enum.count(context.model.players) == 0
     end
 
-    test "an empty list of hands", context do
-      assert context.model.hands == []
+    test "an empty map of hands", context do
+      assert context.model.hands == %{}
     end
 
     test "an empty table", context do
@@ -132,6 +132,19 @@ defmodule Game.ModelTest do
     test "fails when game is not started" do
       model = %Model{}
       assert {:error, {:not_started, ^model}} = Model.deal(model)
+    end
+
+    test "deals 10 cards to each player" do
+      with model = %Model{},
+           {:ok, model} <- Model.add_player(model, "player1"),
+           {:ok, model} <- Model.add_player(model, "player2"),
+           {:ok, model} <- Model.start(model) do
+        all_hands = Model.deal(model).hands
+        assert Enum.count(all_hands) == 2
+        assert Enum.all?(all_hands, fn {_player, hand} -> Enum.count(hand) == 10 end)
+      else
+        _ -> flunk "Game could not start."
+      end
     end
   end
 

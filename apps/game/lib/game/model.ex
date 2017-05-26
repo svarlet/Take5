@@ -9,7 +9,7 @@ defmodule Game.Model do
           end
         end)
 
-  defstruct status: :init, players: MapSet.new, hands: [], table: [], deck: @deck
+  defstruct status: :init, players: MapSet.new, hands: Map.new, table: [], deck: @deck
 
   def add_player(model, player) do
     cond do
@@ -47,7 +47,15 @@ defmodule Game.Model do
   end
 
   def deal(model) do
-    {:error, {:not_started, model}}
+    if model.status == :started do
+      a_hand = List.duplicate 0, 10
+      hands = for player <- model.players, into: Map.new do
+        {player, a_hand}
+      end
+      %__MODULE__{model | hands: hands}
+    else
+      {:error, {:not_started, model}}
+    end
   end
 
   defmodule Card do

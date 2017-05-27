@@ -65,10 +65,13 @@ defmodule Game.Model do
 
   @spec remove_player(t, term) :: success | error
   def remove_player(model, player) do
-    if MapSet.member?(model.players, player) do
-      {:ok, %__MODULE__{model | players: MapSet.delete(model.players, player)}}
-    else
-      {:error, {:not_participating, model}}
+    cond do
+      started?(model) ->
+        {:error, {:not_permitted_in_game, model}}
+      MapSet.member?(model.players, player) ->
+        {:ok, %__MODULE__{model | players: MapSet.delete(model.players, player)}}
+      true ->
+        {:error, {:not_participating, model}}
     end
   end
 

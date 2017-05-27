@@ -56,6 +56,17 @@ defmodule Game.ModelTest do
       {:error, {:not_participating, ^model}} = Model.remove_player(model, "player1")
     end
 
+    test "a player cannot be removed once the game has started" do
+      with model <- %Model{},
+           {:ok, model} <- Model.add_player(model, "player 1"),
+           {:ok, model} <- Model.add_player(model, "player 2"),
+           {:ok, model} <- Model.start(model) do
+        assert {:error, {:not_permitted_in_game, ^model}} = Model.remove_player(model, "player 1")
+      else
+        error -> flunk "Game could not start. (reason: #{inspect error})"
+      end
+    end
+
     test "a player who participates to a game can be removed" do
       with model <- %Model{},
            {:ok, model} <- Model.add_player(model, "player1"),

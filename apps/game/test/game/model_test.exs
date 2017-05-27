@@ -2,20 +2,9 @@ defmodule Game.ModelTest do
   use ExUnit.Case, async: true
 
   alias Game.Model
-  alias Game.Model.Card
 
   defp create_model(_) do
     [model: %Model{}]
-  end
-
-  describe "cards" do
-    test "are numbered" do
-      assert Map.has_key?(%Card{}, :number)
-    end
-
-    test "have a penalty" do
-      assert Map.has_key?(%Card{}, :penalty)
-    end
   end
 
   describe "a model is initialized with" do
@@ -26,7 +15,7 @@ defmodule Game.ModelTest do
     end
 
     test "0 players", context do
-      assert Enum.count(context.model.players) == 0
+      assert Model.count_players(context.model) == 0
     end
 
     test "an empty map of hands", context do
@@ -134,7 +123,7 @@ defmodule Game.ModelTest do
            {:ok, model} <- Model.add_player(model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2") do
         assert {:ok, model} = Model.start(model)
-        assert model.status == :started
+        assert Model.started?(model)
       else
         error -> flunk "Could not start the game successfully. (reason: #{inspect error})"
       end

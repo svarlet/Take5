@@ -22,8 +22,8 @@ defmodule Game.Model do
       false
       iex> Game.Model.count_players(model)
       2
-      iex> model.status
-      :started
+      iex> Game.Model.started?(model)
+      true
 
   """
 
@@ -37,16 +37,17 @@ defmodule Game.Model do
           end
         end)
 
+  @doc false
   defstruct status: :init, players: MapSet.new, hands: Map.new, table: [], deck: @deck
 
-  @type t :: %__MODULE__{status: atom, players: MapSet.t, hands: Map.t, table: list, deck: MapSet.t}
+  @opaque t :: %__MODULE__{status: atom, players: MapSet.t, hands: Map.t, table: list, deck: MapSet.t}
   @type success :: {:ok, t}
   @type error :: {:error, {atom, t}}
 
   @spec add_player(t, term) :: success | error
   def add_player(model, player) do
     cond do
-      model.status == :started ->
+      started?(model) ->
         {:error, {:game_has_already_started, model}}
       MapSet.member?(model.players, player) ->
         {:error, {:already_participating, model}}
@@ -85,9 +86,14 @@ defmodule Game.Model do
     end
   end
 
+  @spec started?(t) :: true | false
+  def started?(model) do
+    model.status == :started
+  end
+
   @spec deal(t) :: success | error
   def deal(model) do
-    if model.status == :started do
+    if started?(model) do
       shuffled_deck = Enum.shuffle(model.deck)
       unassigned_hands = Stream.chunk(shuffled_deck, 10)
       hands = model.players
@@ -99,7 +105,4 @@ defmodule Game.Model do
     end
   end
 
-  defmodule Card do
-    defstruct [:number, :penalty]
-  end
 end

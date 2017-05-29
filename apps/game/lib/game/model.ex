@@ -9,20 +9,20 @@ defmodule Game.Model do
 
   ## Examples
 
-      iex> model = with model <- %Game.Model{},
-      ...>              {:ok, model} <- Game.Model.add_player(model, "player 1"),
-      ...>              {:ok, model} <- Game.Model.add_player(model, "player 2"),
-      ...>              {:ok, model} <- Game.Model.start(model),
-      ...>              {:ok, model} <- Game.Model.deal(model) do
-      ...>           model
-      ...>         end
-      iex> Game.Model.has_player?(model, "player 1")
+      iex> game_model = with model <- %Game.Model{},
+      ...>                   {:ok, model1} <- Game.Model.add_player(model, "player 1"),
+      ...>                   {:ok, model2} <- Game.Model.add_player(model1, "player 2"),
+      ...>                   {:ok, model2_started} <- Game.Model.start(model2),
+      ...>                   {:ok, model2_dealt} <- Game.Model.deal(model2_started) do
+      ...>                model2_dealt
+      ...>              end
+      iex> Game.Model.has_player?(game_model, "player 1")
       true
-      iex> Game.Model.has_player?(model, "not a player")
+      iex> Game.Model.has_player?(game_model, "not a player")
       false
-      iex> Game.Model.count_players(model)
+      iex> Game.Model.count_players(game_model)
       2
-      iex> Game.Model.started?(model)
+      iex> Game.Model.started?(game_model)
       true
 
   """
@@ -37,10 +37,12 @@ defmodule Game.Model do
           end
         end)
 
-  @doc false
-  defstruct status: :init, players: MapSet.new, hands: Map.new, table: [], deck: @deck
+  @empty_hand []
 
-  @opaque t :: %__MODULE__{status: atom, players: MapSet.t, hands: Map.t, table: list, deck: MapSet.t}
+  @doc false
+  defstruct status: :init, players: Map.new, table: [], deck: @deck
+
+  @opaque t :: %__MODULE__{status: atom, players: Map.t, table: list, deck: MapSet.t}
   @type success :: {:ok, t}
   @type error :: {:error, {atom, t}}
 
@@ -49,28 +51,25 @@ defmodule Game.Model do
     cond do
       started?(model) ->
         {:error, {:game_has_already_started, model}}
-      MapSet.member?(model.players, player) ->
+      has_player?(model, player) ->
         {:error, {:already_participating, model}}
-      Enum.count(model.players) >= 10 ->
+      count_players(model) >= 10 ->
         {:error, {:at_capacity, model}}
       true ->
-        {:ok, %__MODULE__{model | players: MapSet.put(model.players, player)}}
+        {:ok, %__MODULE__{model | players: Map.put(model.players, player, @empty_hand)}}
     end
   end
 
   @spec has_player?(t, term) :: true | false
   def has_player?(model, player) do
-    Enum.member?(model.players, player)
+    Map.has_key? model.players, player
   end
 
   @spec remove_player(t, term) :: success | error
   def remove_player(model, player) do
-    cond do
-      started?(model) ->
-        {:error, {:not_permitted_in_game, model}}
-      MapSet.member?(model.players, player) ->
-        {:ok, %__MODULE__{model | players: MapSet.delete(model.players, player)}}
-      true ->
+    if has_player?(model, player) do
+        {:ok, %__MODULE__{model | players: Map.delete(model.players, player)}}
+    else
         {:error, {:not_participating, model}}
     end
   end
@@ -99,10 +98,10 @@ defmodule Game.Model do
     if started?(model) do
       shuffled_deck = Enum.shuffle(model.deck)
       unassigned_hands = Stream.chunk(shuffled_deck, 10)
-      hands = model.players
+      players = model.players
       |> Stream.zip(unassigned_hands)
       |> Enum.into(Map.new)
-      {:ok, %__MODULE__{model | hands: hands, deck: shuffled_deck}}
+      {:ok, %__MODULE__{model | players: players, deck: shuffled_deck}}
     else
       {:error, {:not_started, model}}
     end

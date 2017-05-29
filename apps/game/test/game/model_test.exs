@@ -18,10 +18,6 @@ defmodule Game.ModelTest do
       assert Model.count_players(context.model) == 0
     end
 
-    test "an empty map of hands", context do
-      assert context.model.hands == %{}
-    end
-
     test "an empty table", context do
       assert context.model.table == []
     end
@@ -56,12 +52,14 @@ defmodule Game.ModelTest do
       {:error, {:not_participating, ^model}} = Model.remove_player(model, "player1")
     end
 
-    test "a player cannot be removed once the game has started" do
+    test "a player can be removed once the game has started" do
       with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player 1"),
-           {:ok, model} <- Model.add_player(model, "player 2"),
-           {:ok, model} <- Model.start(model) do
-        assert {:error, {:not_permitted_in_game, ^model}} = Model.remove_player(model, "player 1")
+           {:ok, model1} <- Model.add_player(model, "player 1"),
+           {:ok, model2} <- Model.add_player(model1, "player 2"),
+           {:ok, model3} <- Model.add_player(model2, "player 3"),
+           {:ok, model3} <- Model.start(model3) do
+        assert {:ok, model2_started} = Model.remove_player(model3, "player 3")
+        assert {:ok, model2_started} == Model.start(model2)
       else
         error -> flunk "Game could not start. (reason: #{inspect error})"
       end
@@ -151,10 +149,11 @@ defmodule Game.ModelTest do
       with model = %Model{},
            {:ok, model} <- Model.add_player(model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
-           {:ok, model} <- Model.start(model) do
-        {:ok, %Model{hands: all_hands}} = Model.deal(model)
+           {:ok, model} <- Model.start(model),
+           {:ok, %Model{players: players}} <- Model.deal(model),
+             all_hands <- Map.values(players) do
         assert Enum.count(all_hands) == 2
-        assert Enum.all?(all_hands, fn {_player, hand} -> Enum.count(hand) == 10 end)
+        assert Enum.all?(all_hands, fn hand -> Enum.count(hand) == 10 end)
       else
         error -> flunk "Game could not start. (reason: #{inspect error})"
       end
@@ -166,7 +165,7 @@ defmodule Game.ModelTest do
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model),
            {:ok, model} <- Model.deal(model) do
-        dealt_cards = model.hands
+        dealt_cards = model.players
         |> Enum.flat_map(fn {_player, hand} -> hand end)
         |> Enum.uniq
         assert Enum.count(dealt_cards) == 20
@@ -180,9 +179,9 @@ defmodule Game.ModelTest do
            {:ok, model} <- Model.add_player(model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model) do
-        {:ok, %Model{hands: hands_A}} = Model.deal(model)
-        {:ok, %Model{hands: hands_B}} = Model.deal(model)
-        assert hands_A != hands_B
+        {:ok, %Model{players: players_A}} = Model.deal(model)
+        {:ok, %Model{players: players_B}} = Model.deal(model)
+        assert Map.values(players_A) != Map.values(players_B)
       else
         error -> flunk "Game did not start successfully. (reason: #{inspect error})"
       end

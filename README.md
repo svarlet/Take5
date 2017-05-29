@@ -2,3 +2,9 @@
 [![Built with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://spacemacs.org)
 
 # Take5
+
+## To do
+- [ ] end the game and tell who is the winner when a player leaves a game with only 2 players
+- [ ] rework the model so that hands and players are stored in a unique map
+- [ ] document all errors of the Model module
+- [ ] merge the start and deal functions (start should deal the cards)

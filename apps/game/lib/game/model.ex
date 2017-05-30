@@ -99,6 +99,7 @@ defmodule Game.Model do
       shuffled_deck = Enum.shuffle(model.deck)
       unassigned_hands = Stream.chunk(shuffled_deck, 10)
       players = model.players
+      |> Map.keys
       |> Stream.zip(unassigned_hands)
       |> Enum.into(Map.new)
       {:ok, %__MODULE__{model | players: players, deck: shuffled_deck}}

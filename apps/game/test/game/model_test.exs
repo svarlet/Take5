@@ -7,6 +7,12 @@ defmodule Game.ModelTest do
     [model: %Model{}]
   end
 
+  defp add_players(model, quantity) when quantity in 1..10 do
+    1..quantity
+    |> Enum.map(& "player #{&1}")
+    |> Enum.reduce(model, fn p, m -> Model.add_player(m, p) |> elem(1) end)
+  end
+
   describe "a model is initialized with" do
     setup [:create_model]
 
@@ -54,8 +60,7 @@ defmodule Game.ModelTest do
     end
 
     test "a player can be removed once the game has started", context do
-      with {:ok, model1} <- Model.add_player(context.model, "player 1"),
-           {:ok, model2} <- Model.add_player(model1, "player 2"),
+      with model2 <- add_players(context.model, 2),
            {:ok, model3} <- Model.add_player(model2, "player 3"),
            {:ok, model3} <- Model.start(model3) do
         assert {:ok, model2_started} = Model.remove_player(model3, "player 3")
@@ -84,28 +89,15 @@ defmodule Game.ModelTest do
     end
 
     test "Up to 10 players can participate to a game", context do
-      with {:ok, model} <- Model.add_player(context.model, "player1"),
-           {:ok, model} <- Model.add_player(model, "player2"),
-           {:ok, model} <- Model.add_player(model, "player3"),
-           {:ok, model} <- Model.add_player(model, "player4"),
-           {:ok, model} <- Model.add_player(model, "player5"),
-           {:ok, model} <- Model.add_player(model, "player6"),
-           {:ok, model} <- Model.add_player(model, "player7"),
-           {:ok, model} <- Model.add_player(model, "player8"),
-           {:ok, model} <- Model.add_player(model, "player9"),
-           {:ok, model} <- Model.add_player(model, "player10") do
-        for i <- 1..10 do
-          assert Model.has_player?(model, "player#{i}")
-        end
-        assert {:error, {:at_capacity, ^model}} = Model.add_player(model, "player11")
-      else
-        error -> flunk "Registration of 10 users failed. (reason: #{inspect error})"
+      model = add_players(context.model, 10)
+      for i <- 1..10 do
+        assert Model.has_player?(model, "player #{i}")
       end
+      assert {:error, {:at_capacity, ^model}} = Model.add_player(model, "player11")
     end
 
     test "fails when game has already started", context do
-      with {:ok, model} <- Model.add_player(context.model, "player1"),
-           {:ok, model} <- Model.add_player(model, "player2"),
+      with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model) do
         assert {:error, {:game_has_already_started, ^model}} = Model.add_player(model, "player3")
       else
@@ -126,8 +118,8 @@ defmodule Game.ModelTest do
 
     test "update `status` if there are 2+ participants", context do
       with {:ok, model} <- Model.add_player(context.model, "player1"),
-           {:ok, model} <- Model.add_player(model, "player2") do
-        assert {:ok, model} = Model.start(model)
+           {:ok, model} <- Model.add_player(model, "player2"),
+           {:ok, model} <- Model.start(model) do
         assert Model.started?(model)
       else
         error -> flunk "Could not start the game successfully. (reason: #{inspect error})"
@@ -143,8 +135,7 @@ defmodule Game.ModelTest do
     end
 
     test "fails when cards have already been dealt", context do
-      with {:ok, model} <- Model.add_player(context.model, "player1"),
-           {:ok, model} <- Model.add_player(model, "player2"),
+      with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model),
            {:ok, model} <- Model.deal(model) do
         assert {:error, {:already_dealt_cards, ^model}} = Model.deal(model)
@@ -154,8 +145,7 @@ defmodule Game.ModelTest do
     end
 
     test "deals 10 cards to each player", context do
-      with {:ok, model} <- Model.add_player(context.model, "player1"),
-           {:ok, model} <- Model.add_player(model, "player2"),
+      with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model),
            {:ok, %Model{players: players}} <- Model.deal(model),
              all_hands <- Map.values(players) do
@@ -167,8 +157,7 @@ defmodule Game.ModelTest do
     end
 
     test "deals distinct cards", context do
-      with {:ok, model} <- Model.add_player(context.model, "player1"),
-           {:ok, model} <- Model.add_player(model, "player2"),
+      with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model),
            {:ok, model} <- Model.deal(model) do
         dealt_cards = model.players
@@ -181,8 +170,7 @@ defmodule Game.ModelTest do
     end
 
     test "should provide different hands in different games", context do
-      with {:ok, model} <- Model.add_player(context.model, "player1"),
-           {:ok, model} <- Model.add_player(model, "player2"),
+      with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model) do
         {:ok, %Model{players: players_A}} = Model.deal(model)
         {:ok, %Model{players: players_B}} = Model.deal(model)

@@ -47,14 +47,14 @@ defmodule Game.ModelTest do
   end
 
   describe "players registration" do
-    test "a player cannot be removed if it doesn't participate to a game" do
-      model = %Model{}
+    setup [:create_model]
+
+    test "a player cannot be removed if it doesn't participate to a game", %{model: model} do
       {:error, {:not_participating, ^model}} = Model.remove_player(model, "player1")
     end
 
-    test "a player can be removed once the game has started" do
-      with model <- %Model{},
-           {:ok, model1} <- Model.add_player(model, "player 1"),
+    test "a player can be removed once the game has started", context do
+      with {:ok, model1} <- Model.add_player(context.model, "player 1"),
            {:ok, model2} <- Model.add_player(model1, "player 2"),
            {:ok, model3} <- Model.add_player(model2, "player 3"),
            {:ok, model3} <- Model.start(model3) do
@@ -65,9 +65,8 @@ defmodule Game.ModelTest do
       end
     end
 
-    test "a player who participates to a game can be removed" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "a player who participates to a game can be removed", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.remove_player(model, "player1") do
         refute Model.has_player?(model, "player1")
       else
@@ -75,9 +74,8 @@ defmodule Game.ModelTest do
       end
     end
 
-    test "a player can only register once" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1") do
+    test "a player can only register once", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1") do
         assert Model.has_player?(model, "player1")
         assert {:error, {:already_participating, ^model}} = Model.add_player(model, "player1")
       else
@@ -85,9 +83,8 @@ defmodule Game.ModelTest do
       end
     end
 
-    test "Up to 10 players can participate to a game" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "Up to 10 players can participate to a game", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.add_player(model, "player3"),
            {:ok, model} <- Model.add_player(model, "player4"),
@@ -106,9 +103,8 @@ defmodule Game.ModelTest do
       end
     end
 
-    test "fails when game has already started" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "fails when game has already started", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model) do
         assert {:error, {:game_has_already_started, ^model}} = Model.add_player(model, "player3")
@@ -119,17 +115,17 @@ defmodule Game.ModelTest do
   end
 
   describe "Starting a game" do
-    test "fails when there are fewer than 2 participants" do
-      model = %Model{}
+    setup [:create_model]
+
+    test "fails when there are fewer than 2 participants", %{model: model} do
       assert {:error, {:not_enough_players, ^model}} = Model.start(model)
 
-      {:ok, model} = Model.add_player(model, "player1")
-      assert {:error, {:not_enough_players, ^model}} = Model.start(model)
+      {:ok, model1} = Model.add_player(model, "player1")
+      assert {:error, {:not_enough_players, ^model1}} = Model.start(model1)
     end
 
-    test "update `status` if there are 2+ participants" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "update `status` if there are 2+ participants", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2") do
         assert {:ok, model} = Model.start(model)
         assert Model.started?(model)
@@ -140,14 +136,14 @@ defmodule Game.ModelTest do
   end
 
   describe "Dealing the cards" do
-    test "fails when game is not started" do
-      model = %Model{}
+    setup [:create_model]
+
+    test "fails when game is not started", %{model: model} do
       assert {:error, {:not_started, ^model}} = Model.deal(model)
     end
 
-    test "fails when cards have already been dealt" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "fails when cards have already been dealt", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model),
            {:ok, model} <- Model.deal(model) do
@@ -157,9 +153,8 @@ defmodule Game.ModelTest do
       end
     end
 
-    test "deals 10 cards to each player" do
-      with model = %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "deals 10 cards to each player", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model),
            {:ok, %Model{players: players}} <- Model.deal(model),
@@ -171,9 +166,8 @@ defmodule Game.ModelTest do
       end
     end
 
-    test "deals distinct cards" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "deals distinct cards", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model),
            {:ok, model} <- Model.deal(model) do
@@ -186,9 +180,8 @@ defmodule Game.ModelTest do
       end
     end
 
-    test "should provide different hands in different games" do
-      with model <- %Model{},
-           {:ok, model} <- Model.add_player(model, "player1"),
+    test "should provide different hands in different games", context do
+      with {:ok, model} <- Model.add_player(context.model, "player1"),
            {:ok, model} <- Model.add_player(model, "player2"),
            {:ok, model} <- Model.start(model) do
         {:ok, %Model{players: players_A}} = Model.deal(model)

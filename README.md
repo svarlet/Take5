@@ -5,6 +5,7 @@
 
 ## To do
 - [ ] end the game and tell who is the winner when a player leaves a game with only 2 players
-- [ ] rework the model so that hands and players are stored in a unique map
+- [X] rework the model so that hands and players are stored in a unique map
 - [ ] document all errors of the Model module
 - [ ] merge the start and deal functions (start should deal the cards)
+- [ ] clean up / refactor the tests of the Model module to fight duplication and improve readability

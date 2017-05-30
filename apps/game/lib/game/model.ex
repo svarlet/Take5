@@ -90,21 +90,28 @@ defmodule Game.Model do
 
   @spec started?(t) :: true | false
   def started?(model) do
-    model.status == :started
+    model.status in [:started, :dealt]
+  end
+
+  defp dealt?(model) do
+    model.status == :dealt
   end
 
   @spec deal(t) :: success | error
   def deal(model) do
-    if started?(model) do
-      shuffled_deck = Enum.shuffle(model.deck)
-      unassigned_hands = Stream.chunk(shuffled_deck, 10)
-      players = model.players
-      |> Map.keys
-      |> Stream.zip(unassigned_hands)
-      |> Enum.into(Map.new)
-      {:ok, %__MODULE__{model | players: players, deck: shuffled_deck}}
-    else
-      {:error, {:not_started, model}}
+    cond do
+      dealt?(model) ->
+        {:error, {:already_dealt_cards, model}}
+      started?(model) ->
+        shuffled_deck = Enum.shuffle(model.deck)
+        unassigned_hands = Stream.chunk(shuffled_deck, 10)
+        players = model.players
+        |> Map.keys
+        |> Stream.zip(unassigned_hands)
+        |> Enum.into(Map.new)
+        {:ok, %__MODULE__{model | players: players, deck: shuffled_deck, status: :dealt}}
+      true ->
+        {:error, {:not_started, model}}
     end
   end
 

@@ -145,6 +145,18 @@ defmodule Game.ModelTest do
       assert {:error, {:not_started, ^model}} = Model.deal(model)
     end
 
+    test "fails when cards have already been dealt" do
+      with model <- %Model{},
+           {:ok, model} <- Model.add_player(model, "player1"),
+           {:ok, model} <- Model.add_player(model, "player2"),
+           {:ok, model} <- Model.start(model),
+           {:ok, model} <- Model.deal(model) do
+        assert {:error, {:already_dealt_cards, ^model}} = Model.deal(model)
+      else
+        error -> flunk "Game could not start. (reason: #{inspect error})"
+      end
+    end
+
     test "deals 10 cards to each player" do
       with model = %Model{},
            {:ok, model} <- Model.add_player(model, "player1"),

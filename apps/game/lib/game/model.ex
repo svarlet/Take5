@@ -46,6 +46,63 @@ defmodule Game.Model do
   @type success :: {:ok, t}
   @type error :: {:error, {atom, t}}
 
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    def inspect(model, _opts) do
+      document_builders = [&document_status/1, &document_table/1, &document_players/1]
+      result = document_builders
+      |> Enum.map(fn builder -> builder.(model) end)
+      |> fold_doc(&line/2)
+
+      nested_document("Model", result, 4)
+    end
+
+    defp document_status(model) do
+      "status: #{model.status}"
+    end
+
+    defp document_players(%Game.Model{players: players}) when players in [%{}, nil] do
+      "players: No player."
+    end
+
+    defp document_players(model) do
+      player_hand = fn {player, hand} ->
+        "#{player}: #{document_cards(hand)}"
+      end
+
+      players = model.players
+      |> Enum.map(player_hand)
+      |> fold_doc(&line/2)
+
+      nested_document("players", players, 4)
+    end
+
+    defp document_cards(cards) do
+      cards
+      |> Enum.map(fn {head, _penalty} -> head end)
+      |> Enum.join("-")
+    end
+
+    defp document_table(%Game.Model{table: table}) when table in [[], nil] do
+      "table: Empty"
+    end
+
+    defp document_table(model) do
+      rows = model.table
+      |> Enum.map(&document_cards/1)
+      |> fold_doc(&line/2)
+
+      nested_document("table", rows, 4)
+    end
+
+    defp nested_document(title, items, nesting_level) do
+      "#{title}:"
+      |> line(items)
+      |> nest(nesting_level)
+    end
+  end
+
   @spec add_player(t, term) :: success | error
   def add_player(model, player) do
     cond do

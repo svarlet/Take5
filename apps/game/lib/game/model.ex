@@ -63,7 +63,7 @@ defmodule Game.Model do
     end
 
     defp document_players(%Game.Model{players: players}) when players in [%{}, nil] do
-      "players: No player."
+      "players: none"
     end
 
     defp document_players(model) do
@@ -76,6 +76,10 @@ defmodule Game.Model do
       |> fold_doc(&line/2)
 
       nested_document("players", players, 4)
+    end
+
+    defp document_cards(no_cards) when no_cards in [[], nil] do
+      "no cards"
     end
 
     defp document_cards(cards) do

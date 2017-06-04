@@ -56,7 +56,7 @@ defmodule Game.ModelTest do
     setup [:create_model]
 
     test "a player cannot be removed if it doesn't participate to a game", %{model: model} do
-      {:error, {:not_participating, ^model}} = Model.remove_player(model, "player1")
+      {:error, :not_participating} = Model.remove_player(model, "player1")
     end
 
     test "a player can be removed once the game has started", context do
@@ -82,7 +82,7 @@ defmodule Game.ModelTest do
     test "a player can only register once", context do
       with {:ok, model} <- Model.add_player(context.model, "player1") do
         assert Model.has_player?(model, "player1")
-        assert {:error, {:already_participating, ^model}} = Model.add_player(model, "player1")
+        assert {:error, :already_participating} = Model.add_player(model, "player1")
       else
         error -> flunk("Could not register player1. (reason: #{inspect error})")
       end
@@ -93,13 +93,13 @@ defmodule Game.ModelTest do
       for i <- 1..10 do
         assert Model.has_player?(model, "player #{i}")
       end
-      assert {:error, {:at_capacity, ^model}} = Model.add_player(model, "player11")
+      assert {:error, :at_capacity} = Model.add_player(model, "player11")
     end
 
     test "fails when game has already started", context do
       with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model) do
-        assert {:error, {:game_has_already_started, ^model}} = Model.add_player(model, "player3")
+        assert {:error, :game_has_already_started} = Model.add_player(model, "player3")
       else
         error -> flunk "Failed to start the game. (reason: #{inspect error})"
       end
@@ -110,10 +110,10 @@ defmodule Game.ModelTest do
     setup [:create_model]
 
     test "fails when there are fewer than 2 participants", %{model: model} do
-      assert {:error, {:not_enough_players, ^model}} = Model.start(model)
+      assert {:error, :not_enough_players} = Model.start(model)
 
       {:ok, model1} = Model.add_player(model, "player1")
-      assert {:error, {:not_enough_players, ^model1}} = Model.start(model1)
+      assert {:error, :not_enough_players} = Model.start(model1)
     end
 
     test "update `status` if there are 2+ participants", context do
@@ -131,14 +131,14 @@ defmodule Game.ModelTest do
     setup [:create_model]
 
     test "fails when game is not started", %{model: model} do
-      assert {:error, {:not_started, ^model}} = Model.deal(model)
+      assert {:error, :not_started} = Model.deal(model)
     end
 
     test "fails when cards have already been dealt", context do
       with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model),
            {:ok, model} <- Model.deal(model) do
-        assert {:error, {:already_dealt_cards, ^model}} = Model.deal(model)
+        assert {:error, :already_dealt_cards} = Model.deal(model)
       else
         error -> flunk "Game could not start. (reason: #{inspect error})"
       end

@@ -107,11 +107,11 @@ defmodule Game.Model do
   def add_player(model, player) do
     cond do
       started?(model) ->
-        {:error, {:game_has_already_started, model}}
+        {:error, :game_has_already_started}
       has_player?(model, player) ->
-        {:error, {:already_participating, model}}
+        {:error, :already_participating}
       count_players(model) >= 10 ->
-        {:error, {:at_capacity, model}}
+        {:error, :at_capacity}
       true ->
         {:ok, %__MODULE__{model | players: Map.put(model.players, player, @empty_hand)}}
     end
@@ -127,7 +127,7 @@ defmodule Game.Model do
     if has_player?(model, player) do
         {:ok, %__MODULE__{model | players: Map.delete(model.players, player)}}
     else
-        {:error, {:not_participating, model}}
+        {:error, :not_participating}
     end
   end
 
@@ -141,7 +141,7 @@ defmodule Game.Model do
     if count_players(model) >= 2 do
       {:ok, %__MODULE__{model | status: :started}}
     else
-      {:error, {:not_enough_players, model}}
+      {:error, :not_enough_players}
     end
   end
 
@@ -158,7 +158,7 @@ defmodule Game.Model do
   def deal(model) do
     cond do
       dealt?(model) ->
-        {:error, {:already_dealt_cards, model}}
+        {:error, :already_dealt_cards}
       started?(model) ->
         shuffled_deck = Enum.shuffle(model.deck)
         unassigned_hands = Stream.chunk(shuffled_deck, 10)
@@ -168,7 +168,7 @@ defmodule Game.Model do
         |> Enum.into(Map.new)
         {:ok, %__MODULE__{model | players: players, deck: shuffled_deck, status: :dealt}}
       true ->
-        {:error, {:not_started, model}}
+        {:error, :not_started}
     end
   end
 

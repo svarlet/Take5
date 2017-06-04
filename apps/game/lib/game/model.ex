@@ -44,7 +44,7 @@ defmodule Game.Model do
 
   @opaque t :: %__MODULE__{status: atom, players: Map.t, table: list, deck: MapSet.t}
   @type success :: {:ok, t}
-  @type error :: {:error, {atom, t}}
+  @type error :: {:error, atom}
 
   defimpl Inspect do
     import Inspect.Algebra

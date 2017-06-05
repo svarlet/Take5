@@ -49,13 +49,13 @@ defmodule Game.Model do
   defimpl Inspect do
     import Inspect.Algebra
 
+    @nesting 2
+
     def inspect(model, _opts) do
-      document_builders = [&document_status/1, &document_table/1, &document_players/1]
-      result = document_builders
+      [&document_status/1, &document_table/1, &document_players/1]
       |> Enum.map(fn builder -> builder.(model) end)
       |> fold_doc(&line/2)
-
-      nested_document("Model", result, 4)
+      |> nested("Model")
     end
 
     defp document_status(model) do
@@ -67,15 +67,10 @@ defmodule Game.Model do
     end
 
     defp document_players(model) do
-      player_hand = fn {player, hand} ->
-        "#{player}: #{document_cards(hand)}"
-      end
-
-      players = model.players
-      |> Enum.map(player_hand)
+      model.players
+      |> Enum.map(fn {player, hand} -> "#{player}: #{document_cards(hand)}" end)
       |> fold_doc(&line/2)
-
-      nested_document("players", players, 4)
+      |> nested("players")
     end
 
     defp document_cards(no_cards) when no_cards in [[], nil] do
@@ -85,25 +80,24 @@ defmodule Game.Model do
     defp document_cards(cards) do
       cards
       |> Enum.map(fn {head, _penalty} -> head end)
-      |> Enum.join("-")
+      |> Enum.join(", ")
     end
 
     defp document_table(%Game.Model{table: table}) when table in [[], nil] do
-      "table: Empty"
+      "table: empty"
     end
 
     defp document_table(model) do
-      rows = model.table
+      model.table
       |> Enum.map(&document_cards/1)
       |> fold_doc(&line/2)
-
-      nested_document("table", rows, 4)
+      |> nested("table")
     end
 
-    defp nested_document(title, items, nesting_level) do
+    defp nested(items, title) do
       "#{title}:"
       |> line(items)
-      |> nest(nesting_level)
+      |> nest(@nesting)
     end
   end
 

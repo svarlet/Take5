@@ -63,8 +63,9 @@ defmodule Game.ModelTest do
       with model2 <- add_players(context.model, 2),
            {:ok, model3} <- Model.add_player(model2, "player 3"),
            {:ok, model3} <- Model.start(model3) do
-        assert {:ok, model2_started} = Model.remove_player(model3, "player 3")
-        assert {:ok, model2_started} == Model.start(model2)
+        {:ok, model2} = Model.remove_player(model3, "player 3")
+        assert model2.players["player 1"] == model3.players["player 1"]
+        assert model2.players["player 2"] == model3.players["player 2"]
       else
         error -> flunk "Game could not start. (reason: #{inspect error})"
       end
@@ -125,30 +126,11 @@ defmodule Game.ModelTest do
         error -> flunk "Could not start the game successfully. (reason: #{inspect error})"
       end
     end
-  end
-
-  describe "Dealing the cards" do
-    setup [:create_model]
-
-    test "fails when game is not started", %{model: model} do
-      assert {:error, :not_started} = Model.deal(model)
-    end
-
-    test "fails when cards have already been dealt", context do
-      with model <- add_players(context.model, 2),
-           {:ok, model} <- Model.start(model),
-           {:ok, model} <- Model.deal(model) do
-        assert {:error, :already_dealt_cards} = Model.deal(model)
-      else
-        error -> flunk "Game could not start. (reason: #{inspect error})"
-      end
-    end
 
     test "deals 10 cards to each player", context do
       with model <- add_players(context.model, 2),
-           {:ok, model} <- Model.start(model),
-           {:ok, %Model{players: players}} <- Model.deal(model),
-             all_hands <- Map.values(players) do
+           {:ok, %Model{players: players}} <- Model.start(model),
+            all_hands <- Map.values(players) do
         assert Enum.count(all_hands) == 2
         assert Enum.all?(all_hands, fn hand -> Enum.count(hand) == 10 end)
       else
@@ -158,8 +140,7 @@ defmodule Game.ModelTest do
 
     test "deals distinct cards", context do
       with model <- add_players(context.model, 2),
-           {:ok, model} <- Model.start(model),
-           {:ok, model} <- Model.deal(model) do
+           {:ok, model} <- Model.start(model) do
         dealt_cards = model.players
         |> Enum.flat_map(fn {_player, hand} -> hand end)
         |> Enum.uniq
@@ -171,10 +152,9 @@ defmodule Game.ModelTest do
 
     test "should provide different hands in different games", context do
       with model <- add_players(context.model, 2),
-           {:ok, model} <- Model.start(model) do
-        {:ok, %Model{players: players_A}} = Model.deal(model)
-        {:ok, %Model{players: players_B}} = Model.deal(model)
-        assert Map.values(players_A) != Map.values(players_B)
+           {:ok, %Model{players: players_a}} <- Model.start(model),
+           {:ok, %Model{players: players_b}} <- Model.start(model) do
+        assert Map.values(players_a) != Map.values(players_b)
       else
         error -> flunk "Game did not start successfully. (reason: #{inspect error})"
       end

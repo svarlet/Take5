@@ -12,9 +12,8 @@ defmodule Game.Model do
       iex> game_model = with model <- %Game.Model{},
       ...>                   {:ok, model1} <- Game.Model.add_player(model, "player 1"),
       ...>                   {:ok, model2} <- Game.Model.add_player(model1, "player 2"),
-      ...>                   {:ok, model2_started} <- Game.Model.start(model2),
-      ...>                   {:ok, model2_dealt} <- Game.Model.deal(model2_started) do
-      ...>                model2_dealt
+      ...>                   {:ok, model2_started} <- Game.Model.start(model2) do
+      ...>                model2_started
       ...>              end
       iex> Game.Model.has_player?(game_model, "player 1")
       true
@@ -82,7 +81,7 @@ defmodule Game.Model do
   @spec start(t) :: success | error
   def start(model) do
     if count_players(model) >= 2 do
-      {:ok, %__MODULE__{model | status: :started}}
+      deal(%__MODULE__{model | status: :started})
     else
       {:error, :not_enough_players}
     end
@@ -90,29 +89,18 @@ defmodule Game.Model do
 
   @spec started?(t) :: true | false
   def started?(model) do
-    model.status in [:started, :dealt]
-  end
-
-  defp dealt?(model) do
-    model.status == :dealt
+    model.status == :started
   end
 
   @spec deal(t) :: success | error
-  def deal(model) do
-    cond do
-      dealt?(model) ->
-        {:error, :already_dealt_cards}
-      started?(model) ->
-        shuffled_deck = Enum.shuffle(model.deck)
-        unassigned_hands = Stream.chunk(shuffled_deck, 10)
-        players = model.players
-        |> Map.keys
-        |> Stream.zip(unassigned_hands)
-        |> Enum.into(Map.new)
-        {:ok, %__MODULE__{model | players: players, deck: shuffled_deck, status: :dealt}}
-      true ->
-        {:error, :not_started}
-    end
+  defp deal(model) do
+    shuffled_deck = Enum.shuffle(model.deck)
+    unassigned_hands = Stream.chunk(shuffled_deck, 10)
+    players = model.players
+    |> Map.keys
+    |> Stream.zip(unassigned_hands)
+    |> Enum.into(Map.new)
+    {:ok, %__MODULE__{model | players: players, deck: shuffled_deck}}
   end
 
   #

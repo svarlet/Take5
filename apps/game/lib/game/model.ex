@@ -46,61 +46,6 @@ defmodule Game.Model do
   @type success :: {:ok, t}
   @type error :: {:error, atom}
 
-  defimpl Inspect do
-    import Inspect.Algebra
-
-    @nesting 2
-
-    def inspect(model, _opts) do
-      [&document_status/1, &document_table/1, &document_players/1]
-      |> Enum.map(fn builder -> builder.(model) end)
-      |> fold_doc(&line/2)
-      |> nested("Model")
-    end
-
-    defp document_status(model) do
-      "status: #{model.status}"
-    end
-
-    defp document_players(%Game.Model{players: players}) when players in [%{}, nil] do
-      "players: none"
-    end
-
-    defp document_players(model) do
-      model.players
-      |> Enum.map(fn {player, hand} -> "#{player}: #{document_cards(hand)}" end)
-      |> fold_doc(&line/2)
-      |> nested("players")
-    end
-
-    defp document_cards(no_cards) when no_cards in [[], nil] do
-      "no cards"
-    end
-
-    defp document_cards(cards) do
-      cards
-      |> Enum.map(fn {head, _penalty} -> head end)
-      |> Enum.join(", ")
-    end
-
-    defp document_table(%Game.Model{table: table}) when table in [[], nil] do
-      "table: empty"
-    end
-
-    defp document_table(model) do
-      model.table
-      |> Enum.map(&document_cards/1)
-      |> fold_doc(&line/2)
-      |> nested("table")
-    end
-
-    defp nested(items, title) do
-      "#{title}:"
-      |> line(items)
-      |> nest(@nesting)
-    end
-  end
-
   @spec add_player(t, term) :: success | error
   def add_player(model, player) do
     cond do
@@ -167,6 +112,65 @@ defmodule Game.Model do
         {:ok, %__MODULE__{model | players: players, deck: shuffled_deck, status: :dealt}}
       true ->
         {:error, :not_started}
+    end
+  end
+
+  #
+  # Inspect protocol
+  #
+
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    @nesting 2
+
+    def inspect(model, _opts) do
+      [&document_status/1, &document_table/1, &document_players/1]
+      |> Enum.map(fn builder -> builder.(model) end)
+      |> fold_doc(&line/2)
+      |> nested("Model")
+    end
+
+    defp document_status(model) do
+      "status: #{model.status}"
+    end
+
+    defp document_players(%Game.Model{players: players}) when players in [%{}, nil] do
+      "players: none"
+    end
+
+    defp document_players(model) do
+      model.players
+      |> Enum.map(fn {player, hand} -> "#{player}: #{document_cards(hand)}" end)
+      |> fold_doc(&line/2)
+      |> nested("players")
+    end
+
+    defp document_cards(no_cards) when no_cards in [[], nil] do
+      "no cards"
+    end
+
+    defp document_cards(cards) do
+      cards
+      |> Enum.map(fn {head, _penalty} -> head end)
+      |> Enum.join(", ")
+    end
+
+    defp document_table(%Game.Model{table: table}) when table in [[], nil] do
+      "table: empty"
+    end
+
+    defp document_table(model) do
+      model.table
+      |> Enum.map(&document_cards/1)
+      |> fold_doc(&line/2)
+      |> nested("table")
+    end
+
+    defp nested(items, title) do
+      "#{title}:"
+      |> line(items)
+      |> nest(@nesting)
     end
   end
 

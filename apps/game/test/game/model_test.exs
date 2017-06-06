@@ -25,7 +25,7 @@ defmodule Game.ModelTest do
     end
 
     test "an empty table", context do
-      assert context.model.table == []
+      assert context.model.table == %{0 => [], 1 => [], 2 => [], 3 =>[]}
     end
 
     test "a deck of 104 unique cards with penalties", context do
@@ -159,5 +159,20 @@ defmodule Game.ModelTest do
         error -> flunk "Game did not start successfully. (reason: #{inspect error})"
       end
     end
+
+    test "arrange 4 different cards on the table", context do
+      with model <- add_players(context.model, 2),
+           {:ok, %Model{table: table}} <- Model.start(model) do
+        %{0 => [card_0], 1 => [card_1], 2 => [card_2], 3 => [card_3]} = table
+        table_cards = [card_0, card_1, card_2, card_3]
+        assert Enum.uniq(table_cards) == table_cards
+        assert Enum.all?([card_0, card_1, card_2, card_3], &is_card?/1)
+      else
+        error -> flunk "Could not start a regular game with 2 players. (reason: #{inspect error})"
+      end
+    end
+
+    defp is_card?({head, penalty}) when head in 1..104 and penalty in [1, 2, 3, 5, 7], do: true
+    defp is_card?(_), do: false
   end
 end

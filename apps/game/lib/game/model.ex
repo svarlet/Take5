@@ -37,11 +37,14 @@ defmodule Game.Model do
         end)
 
   @empty_hand []
+  @empty_table %{0 => [], 1 => [], 2 => [], 3 => []}
 
   @doc false
-  defstruct status: :init, players: Map.new, table: [], deck: @deck
+  defstruct status: :init, players: Map.new, table: @empty_table, deck: @deck
 
-  @opaque t :: %__MODULE__{status: atom, players: Map.t, table: list, deck: MapSet.t}
+  @opaque card :: {1..104, 1 | 2 | 3 | 5 | 7}
+  @opaque row :: list(card)
+  @opaque t :: %__MODULE__{status: atom, players: Map.t, table: %{0 => row, 1 => row, 2 => row, 3 => row}, deck: MapSet.t}
   @type success :: {:ok, t}
   @type error :: {:error, atom}
 
@@ -81,7 +84,10 @@ defmodule Game.Model do
   @spec start(t) :: success | error
   def start(model) do
     if count_players(model) >= 2 do
-      deal(%__MODULE__{model | status: :started})
+      {:ok, model
+      |> Map.put(:status, :started)
+      |> deal
+      |> arrange_table}
     else
       {:error, :not_enough_players}
     end
@@ -92,7 +98,7 @@ defmodule Game.Model do
     model.status == :started
   end
 
-  @spec deal(t) :: success | error
+  @spec deal(t) :: t
   defp deal(model) do
     shuffled_deck = Enum.shuffle(model.deck)
     unassigned_hands = Stream.chunk(shuffled_deck, 10)
@@ -100,7 +106,13 @@ defmodule Game.Model do
     |> Map.keys
     |> Stream.zip(unassigned_hands)
     |> Enum.into(Map.new)
-    {:ok, %__MODULE__{model | players: players, deck: shuffled_deck}}
+    %__MODULE__{model | players: players, deck: shuffled_deck}
+  end
+
+  @spec arrange_table(t) :: t
+  defp arrange_table(model) do
+    [c0, c1, c2, c3 | deck] = model.deck
+    %__MODULE__{model | deck: deck, table: %{0 => [c0], 1 => [c1], 2 => [c2], 3 => [c3]}}
   end
 
   #

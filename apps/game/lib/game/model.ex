@@ -111,7 +111,7 @@ defmodule Game.Model do
 
   @spec arrange_table(t) :: t
   defp arrange_table(model) do
-    [c0, c1, c2, c3 | deck] = model.deck
+    {[c0, c1, c2, c3], deck} = Enum.split(model.deck, 4)
     %__MODULE__{model | deck: deck, table: %{0 => [c0], 1 => [c1], 2 => [c2], 3 => [c3]}}
   end
 

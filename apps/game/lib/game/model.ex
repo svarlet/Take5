@@ -36,54 +36,48 @@ defmodule Game.Model do
           end
         end)
 
-  @empty_hand []
   @empty_table %{0 => [], 1 => [], 2 => [], 3 => []}
 
+  alias Game.Players
+
   @doc false
-  defstruct status: :init, players: Map.new, table: @empty_table, deck: @deck
+  defstruct status: :init, players: Players.new, table: @empty_table, deck: @deck
 
   @opaque card :: {1..104, 1 | 2 | 3 | 5 | 7}
   @opaque row :: list(card)
-  @opaque t :: %__MODULE__{status: atom, players: Map.t, table: %{0 => row, 1 => row, 2 => row, 3 => row}, deck: MapSet.t}
+  @opaque t :: %__MODULE__{status: atom, players: Players.t, table: %{0 => row, 1 => row, 2 => row, 3 => row}, deck: MapSet.t}
   @type success :: {:ok, t}
   @type error :: {:error, atom}
 
   @spec add_player(t, term) :: success | error
-  def add_player(model, player) do
-    cond do
-      started?(model) ->
-        {:error, :game_has_already_started}
-      has_player?(model, player) ->
-        {:error, :already_participating}
-      count_players(model) >= 10 ->
-        {:error, :at_capacity}
-      true ->
-        {:ok, %__MODULE__{model | players: Map.put(model.players, player, @empty_hand)}}
-    end
+  def add_player(%__MODULE__{status: :started}, _player) do
+    {:error, :game_has_already_started}
   end
 
-  @spec has_player?(t, term) :: true | false
-  def has_player?(model, player) do
-    Map.has_key? model.players, player
+  def add_player(model, player) do
+    case Players.add_player(model.players, player) do
+      {:ok, players} -> {:ok, %__MODULE__{model | players: players}}
+      error -> error
+    end
   end
 
   @spec remove_player(t, term) :: success | error
   def remove_player(model, player) do
-    if has_player?(model, player) do
-        {:ok, %__MODULE__{model | players: Map.delete(model.players, player)}}
-    else
-        {:error, :not_participating}
+    case Players.remove_player(model.players, player) do
+      {:ok, players} -> {:ok, %__MODULE__{model | players: players}}
+      error -> error
     end
   end
 
+  @spec has_player?(t, String.t) :: boolean()
+  def has_player?(model, player), do: Players.has_player?(model.players, player)
+
   @spec count_players(t) :: non_neg_integer
-  def count_players(model) do
-    Enum.count(model.players)
-  end
+  def count_players(model), do: Players.count_players(model.players)
 
   @spec start(t) :: success | error
   def start(model) do
-    if count_players(model) >= 2 do
+    if Players.count_players(model.players) >= 2 do
       {:ok, model
       |> Map.put(:status, :started)
       |> deal

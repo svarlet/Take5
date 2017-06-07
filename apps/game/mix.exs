@@ -37,7 +37,8 @@ defmodule Game.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:dialyze, "~> 0.2.1", only: [:dev, :test]},
-     {:credo, "~> 0.7", only: :dev}
+     {:credo, "~> 0.7", only: :dev},
+     {:quixir, "~> 0.9", only: :test}
     ]
   end
 end

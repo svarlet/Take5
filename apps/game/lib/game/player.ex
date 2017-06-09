@@ -38,7 +38,7 @@ defmodule Game.Player do
   @empty_hand []
 
   @enforce_keys [:name]
-  defstruct name: "", hand: @empty_hand, selected: nil
+  defstruct name: "", hand: @empty_hand, selected: :none
 
   @doc """
   Creates a new player with the provided name.
@@ -79,13 +79,19 @@ defmodule Game.Player do
   """
   @spec select(t, Card.t) :: {:ok, t} | {:error, :card_not_in_hand}
   def select(player, card) do
-    if has_card?(player, card) do
-      hand = List.delete(player.hand, card)
-      {:ok, %__MODULE__{player | hand: hand, selected: card}}
-    else
-      {:error, :card_not_in_hand}
+    cond do
+      has_a_selection?(player) ->
+        {:error, :already_picked_a_card}
+      has_card?(player, card) ->
+        hand = List.delete(player.hand, card)
+        {:ok, %__MODULE__{player | hand: hand, selected: card}}
+      true ->
+        {:error, :card_not_in_hand}
     end
   end
+
+  defp has_a_selection?(%__MODULE__{selected: :none}), do: false
+  defp has_a_selection?(_), do: true
 
   #
   # INSPECT PROTOCOL

@@ -26,87 +26,114 @@ defmodule Game.Model do
 
   """
 
+  import Game.Card, only: [card: 2]
+
   @deck (for n <- 1..104, into: MapSet.new do
           cond do
-            n == 55 -> {55, 7}
-            rem(n, 5) == 0 && rem(n, 10) != 0 -> {n, 2}
-            rem(n, 11) == 0 -> {n, 5}
-            rem(n, 10) == 0 -> {n, 3}
-            true -> {n, 1}
+            n == 55 -> card(55, 7)
+            rem(n, 5) == 0 && rem(n, 10) != 0 -> card(n, 2)
+            rem(n, 11) == 0 -> card(n, 5)
+            rem(n, 10) == 0 -> card(n, 3)
+            true -> card(n, 1)
           end
         end)
 
   @empty_table %{0 => [], 1 => [], 2 => [], 3 => []}
 
-  alias Game.Players
+  alias Game.{Card, Player}
 
   @doc false
-  defstruct status: :init, players: Players.new, table: @empty_table, deck: @deck
+  defstruct status: :init, players: Map.new, table: @empty_table, deck: @deck
 
-  @opaque card :: {1..104, 1 | 2 | 3 | 5 | 7}
-  @opaque row :: list(card)
-  @opaque t :: %__MODULE__{status: atom, players: Players.t, table: %{0 => row, 1 => row, 2 => row, 3 => row}, deck: MapSet.t}
+  @type row :: list(Card.t)
+  @type t :: %__MODULE__{status: :init | :started, players: Map.t, table: %{0 => row, 1 => row, 2 => row, 3 => row}, deck: MapSet.t}
   @type success :: {:ok, t}
   @type error :: {:error, atom}
 
-  @spec add_player(t, term) :: success | error
-  def add_player(%__MODULE__{status: :started}, _player) do
-    {:error, :game_has_already_started}
-  end
-
-  def add_player(model, player) do
-    case Players.add_player(model.players, player) do
-      {:ok, players} -> {:ok, %__MODULE__{model | players: players}}
-      error -> error
+  @spec add_player(t, String.t) :: success | error
+  def add_player(model, name) do
+    cond do
+      started?(model) ->
+        {:error, :game_has_already_started}
+      has_player?(model, name) ->
+        {:error, :already_participating}
+      count_players(model) >= 10 ->
+        {:error, :at_capacity}
+      true ->
+        new_player = Player.new(name)
+        {:ok, %__MODULE__{model | players: Map.put(model.players, name, new_player)}}
     end
   end
 
-  @spec remove_player(t, term) :: success | error
-  def remove_player(model, player) do
-    case Players.remove_player(model.players, player) do
-      {:ok, players} -> {:ok, %__MODULE__{model | players: players}}
-      error -> error
-    end
+  @spec has_player?(t, String.t) :: true | false
+  def has_player?(model, name) do
+    Map.has_key? model.players, name
   end
-
-  @spec has_player?(t, String.t) :: boolean()
-  def has_player?(model, player), do: Players.has_player?(model.players, player)
 
   @spec count_players(t) :: non_neg_integer
-  def count_players(model), do: Players.count_players(model.players)
+  def count_players(model) do
+    Enum.count(model.players)
+  end
+
+  @spec remove_player(t, String.t) :: success | error
+  def remove_player(model, name) do
+    if has_player?(model, name) do
+      {:ok, %__MODULE__{model | players: Map.delete(model.players, name)}}
+    else
+      {:error, :not_participating}
+    end
+  end
 
   @spec start(t) :: success | error
   def start(model) do
-    if Players.count_players(model.players) >= 2 do
-      {:ok, model
+    if count_players(model) >= 2 do
+      result = model
       |> Map.put(:status, :started)
       |> deal
-      |> arrange_table}
+      |> arrange_table
+      {:ok, result}
     else
       {:error, :not_enough_players}
     end
   end
 
-  @spec started?(t) :: true | false
-  def started?(model) do
-    model.status == :started
-  end
+  @spec started?(t) :: boolean()
+  def started?(model), do: model.status == :started
 
-  @spec deal(t) :: t
   defp deal(model) do
-    shuffled_deck = Enum.shuffle(model.deck)
-    unassigned_hands = Stream.chunk(shuffled_deck, 10)
+    {distributable, remaining_cards} = model.deck
+    |> Enum.shuffle
+    |> Enum.split(10 * count_players(model))
+
+    hands = Enum.chunk(distributable, 10)
+
     players = model.players
     |> Map.keys
-    |> Stream.zip(unassigned_hands)
+    |> Enum.zip(hands)
+    |> Enum.map(fn {name, hand} -> {name, Player.new(name, hand)} end)
     |> Enum.into(Map.new)
-    %__MODULE__{model | players: players, deck: shuffled_deck}
+
+    %__MODULE__{model | players: players, deck: remaining_cards}
   end
 
-  @spec arrange_table(t) :: t
   defp arrange_table(model) do
     {[c0, c1, c2, c3], deck} = Enum.split(model.deck, 4)
     %__MODULE__{model | deck: deck, table: %{0 => [c0], 1 => [c1], 2 => [c2], 3 => [c3]}}
+  end
+
+  @spec select(t, String.t, Card.t) :: success | error
+  def select(model, name, card) do
+    cond do
+      !started?(model) ->
+        {:error, :game_not_started}
+      !has_player?(model, name) ->
+        {:error, :not_playing}
+      !Player.has_card?(model.players[name], card) ->
+        {:error, :card_not_in_hand}
+      true ->
+        {:ok, p} = Player.select(model.players[name], card)
+        {:ok, update_in(model, [:players, name], p)}
+    end
   end
 
   #
@@ -135,20 +162,24 @@ defmodule Game.Model do
 
     defp document_players(model) do
       model.players
-      |> Enum.map(fn {player, hand} -> "#{player}: #{document_cards(hand)}" end)
+      |> Enum.map(fn {name, state} -> "#{name}: #{document_cards(state.hand, state.played)}" end)
       |> fold_doc(&line/2)
       |> nested("players")
     end
 
-    defp document_cards(no_cards) when no_cards in [[], nil] do
+    defp document_cards(no_cards, _) when no_cards in [[], nil] do
       "no cards"
     end
 
-    defp document_cards(cards) do
+    defp document_cards(cards, {head, _} = _played_card) do
       cards
-      |> Enum.map(fn {head, _penalty} -> head end)
+      |> Enum.map(fn {h, _} = card -> document_card(card, h == head) end)
       |> Enum.join(", ")
     end
+
+    defp document_card(card, played \\ false)
+    defp document_card({head, _}, true), do: concat(["[", head, "]"])
+    defp document_card({head, _}, _), do: head
 
     defp document_table(%Game.Model{table: table}) when table in [[], nil] do
       "table: empty"
@@ -156,7 +187,7 @@ defmodule Game.Model do
 
     defp document_table(model) do
       model.table
-      |> Enum.map(&document_cards/1)
+      |> Enum.map(fn card -> document_card(card) end)
       |> fold_doc(&line/2)
       |> nested("table")
     end

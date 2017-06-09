@@ -34,6 +34,12 @@ defmodule Game.PlayerTest do
     end
   end
 
+  test "starts with no selected card" do
+    ptest name: string(min: 1) do
+      assert Player.new(name).selected == :none
+    end
+  end
+
   test "has_card? returns false when the player's hand doesn't contain the specified card" do
     ptest hand_size: int(min: 0, max: 10) do
       {hand, deck} = random_hand_and_deck(hand_size)
@@ -80,6 +86,16 @@ defmodule Game.PlayerTest do
       one_of_his_card = Enum.random(p.hand)
       assert {:ok, p_updated} = Player.select(p, one_of_his_card)
       refute Player.has_card?(p_updated, one_of_his_card)
+    end
+  end
+
+  test "selecting a second card returns an error" do
+    ptest hand_size: int(min: 2, max: 10) do
+      [c1, c2 | _] = hand = random_hand(hand_size)
+      {:ok, p} = "George"
+      |> Player.new(hand)
+      |> Player.select(c1)
+      assert {:error, :already_picked_a_card} == Player.select(p, c2)
     end
   end
 

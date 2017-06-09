@@ -1,7 +1,7 @@
 defmodule Game.ModelTest do
   use ExUnit.Case, async: true
 
-  alias Game.Model
+  alias Game.{Model, Card}
 
   defp create_model(_) do
     [model: %Model{}]
@@ -10,7 +10,7 @@ defmodule Game.ModelTest do
   defp add_players(model, quantity) when quantity in 1..10 do
     1..quantity
     |> Enum.map(& "player #{&1}")
-    |> Enum.reduce(model, fn p, m -> Model.add_player(m, p) |> elem(1) end)
+    |> Enum.reduce(model, fn p, m -> m |> Model.add_player(p) |> elem(1) end)
   end
 
   describe "a model is initialized with" do
@@ -33,7 +33,7 @@ defmodule Game.ModelTest do
 
       number_for_penalties =
         context.model.deck
-        |> Enum.group_by(fn {_, penalty} -> penalty end, fn {number, _} -> number end)
+        |> Enum.group_by(fn card -> card.penalty end, fn card -> card.head end)
 
       penalty_of = fn penalty ->
         number_for_penalties
@@ -130,7 +130,7 @@ defmodule Game.ModelTest do
     test "deals 10 cards to each player", context do
       with model <- add_players(context.model, 2),
            {:ok, %Model{players: players}} <- Model.start(model),
-            all_hands <- Map.values(players) do
+             all_hands <- Enum.map(players, fn {_name, player} -> player.hand end) do
         assert Enum.count(all_hands) == 2
         assert Enum.all?(all_hands, fn hand -> Enum.count(hand) == 10 end)
       else
@@ -142,7 +142,7 @@ defmodule Game.ModelTest do
       with model <- add_players(context.model, 2),
            {:ok, model} <- Model.start(model) do
         dealt_cards = model.players
-        |> Enum.flat_map(fn {_player, hand} -> hand end)
+        |> Enum.flat_map(fn {_player_name, state} -> state.hand end)
         |> Enum.uniq
         assert Enum.count(dealt_cards) == 20
       else
@@ -160,6 +160,17 @@ defmodule Game.ModelTest do
       end
     end
 
+    test "does not select a card to play on behalf of the player", context do
+      with model <- add_players(context.model, 2),
+           {:ok, %Model{players: players}} <- Model.start(model),
+             all_players <- Map.values(players),
+             all_selected_cards <- Enum.map(all_players, fn p -> p.selected end) do
+        assert Enum.all?(all_selected_cards, &(&1 == :none))
+      else
+        error -> flunk "Game could not start. (reason: #{inspect error})"
+      end
+    end
+
     test "arrange 4 different cards on the table", context do
       with model <- add_players(context.model, 2),
            {:ok, %Model{table: table}} <- Model.start(model) do
@@ -172,7 +183,37 @@ defmodule Game.ModelTest do
       end
     end
 
-    defp is_card?({head, penalty}) when head in 1..104 and penalty in [1, 2, 3, 5, 7], do: true
+    defp is_card?(%Card{}), do: true
     defp is_card?(_), do: false
+  end
+
+  describe "In game" do
+    setup [:create_model]
+
+    test "playing a card before the game starts returns an error", context do
+      result = context.model
+      |> add_players(2)
+      |> Model.select("player 1", {1, 1})
+      assert {:error, :game_not_started} == result
+    end
+
+    test "playing a card with an invalid player returns an error", context do
+      with model <- add_players(context.model, 2),
+           {:ok, model} <- Model.start(model) do
+        assert {:error, :not_playing} == Model.select(model, "not a player", {1, 1})
+      else
+        error -> flunk "Could not initialize the game. (reason: #{inspect error})"
+      end
+    end
+
+    test "playing a card that the player doesn't own returns an error", context do
+      with model <- add_players(context.model, 2),
+           {:ok, model} <- Model.start(model) do
+        assert {:error, :card_not_in_hand} == Model.select(model, "player 1", Enum.take(model.deck, 1))
+      else
+        error -> flunk "Could not initialize the game. (reason: #{inspect error})"
+      end
+    end
+
   end
 end

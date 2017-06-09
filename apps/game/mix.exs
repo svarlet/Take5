@@ -11,7 +11,13 @@ defmodule Game.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps()]
+     deps: deps(),
+
+     # For ex_doc
+     name: "Take5 game logic and models",
+     source_url: "https://github.com/svarlet/Take5/tree/master/apps/game",
+     homepage_url: "https://github.com/svarlet/Take5"
+    ]
   end
 
   # Configuration for the OTP application
@@ -38,7 +44,8 @@ defmodule Game.Mixfile do
   defp deps do
     [{:dialyze, "~> 0.2.1", only: [:dev, :test]},
      {:credo, "~> 0.7", only: :dev},
-     {:quixir, "~> 0.9", only: :test}
+     {:quixir, "~> 0.9", only: :test},
+     {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
   end
 end

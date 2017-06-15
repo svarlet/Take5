@@ -1,7 +1,8 @@
 defmodule Game.ModelTest do
   use ExUnit.Case, async: true
+  use PropCheck
 
-  alias Game.{Model, Card}
+  alias Game.{Model, Card, Player}
 
   defp create_model(_) do
     [model: %Model{}]
@@ -214,6 +215,82 @@ defmodule Game.ModelTest do
         error -> flunk "Could not initialize the game. (reason: #{inspect error})"
       end
     end
+
+    test "playing 2 cards for the same player returns an error", context do
+      with model <- add_players(context.model, 2),
+           {:ok, model} <- Model.start(model),
+             %Player{hand: [card1, card2 | _]} <- model.players["player 1"],
+           {:ok, model} <- Model.select(model, "player 1", card1) do
+        assert {:error, :already_picked_a_card} == Model.select(model, "player 1", card2)
+      else
+        error -> flunk "Could not setup the game and select one card for player 1. (reason: #{inspect error})"
+      end
+    end
+
+    # test "process_round returns an error until all players have selected a card", context do
+    #   ptest players: int(min: 2, max: 10), selections: int(min: 0, max: ^players - 1) do
+    #     with model <- add_players(context.model, players),
+    #          {:ok, model} <- Model.start(model) do
+
+    #       select_first = fn player ->
+    #         {:ok, p} = Player.select(player, hd(player.hand))
+    #         p
+    #       end
+
+    #       {some_players, other_players} = model.players
+    #       |> Map.values
+    #       |> Enum.shuffle
+    #       |> Enum.split(selections)
+
+    #       updated_players = some_players
+    #       |> Enum.map(select_first)
+    #       |> Enum.concat(other_players)
+    #       |> Enum.shuffle
+    #       |> Enum.reduce(Map.new, fn p, acc -> Map.put_new(acc, p.name, p) end)
+
+    #       updated_model = %Model{model | players: updated_players}
+
+    #       assert {:error, :missing_selection} == Model.process_round(updated_model)
+    #     else
+    #       error -> flunk "Could not setup the game. (reason: #{inspect error})"
+    #     end
+    #   end
+    # end
+
+    # property "process_round returns an error if any player hasn't selected card", context do
+    #   forall players <- players_gen() do
+    #     model = Enum.reduce(players, context.model, fn (player, model) ->
+    #       {:ok, model} = Model.add_player(model, player)
+    #       model
+    #     end)
+    #     lol
+
+    #   end
+    # end
+
+    # test "when all players have selected a card, process_round succeeds", context do
+    #   ptest players: int(min: 2, max: 10) do
+    #     with model <- add_players(context.model, players),
+    #          {:ok, model} <- Model.start(model) do
+
+    #       select_first = fn player ->
+    #         {:ok, p} = Player.select(player, hd(player.hand))
+    #         p
+    #       end
+
+    #       updated_players = model.players
+    #       |> Enum.map(fn {name, player} -> {name, select_first.(player)} end)
+    #       |> Enum.into(Map.new)
+
+    #       model = %Model{players: updated_players}
+
+    #       assert {:ok, _} = Model.process_round(model)
+
+    #     else
+    #       error -> flunk "Could not setup the game. (reason: #{inspect error})"
+    #     end
+    #   end
+    # end
 
   end
 end

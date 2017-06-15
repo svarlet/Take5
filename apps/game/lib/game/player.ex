@@ -93,17 +93,21 @@ defmodule Game.Player do
   defp has_a_selection?(%__MODULE__{selected: :none}), do: false
   defp has_a_selection?(_), do: true
 
+  def no_selection?(player) do
+    not has_a_selection?(player)
+  end
+
   #
   # INSPECT PROTOCOL
   #
 
   defimpl Inspect do
-    def inspect(%Game.Player{selected: nil} = player, _opts) do
+    def inspect(%Game.Player{selected: :none} = player, _opts) do
       "#{player.name}: #{inspect player.hand}"
     end
 
     def inspect(player, _opts) do
-      "#{player.name}: #{player.selected} | #{inspect player.hand}"
+      "#{player.name}: #{inspect player.selected} | #{inspect player.hand}"
     end
   end
 

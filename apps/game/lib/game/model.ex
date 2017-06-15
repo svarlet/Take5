@@ -38,6 +38,9 @@ defmodule Game.Model do
           end
         end)
 
+  @spec deck() :: MapSet.t
+  def deck(), do: @deck
+
   @empty_table %{0 => [], 1 => [], 2 => [], 3 => []}
 
   alias Game.{Card, Player}
@@ -131,8 +134,26 @@ defmodule Game.Model do
       !Player.has_card?(model.players[name], card) ->
         {:error, :card_not_in_hand}
       true ->
-        {:ok, p} = Player.select(model.players[name], card)
-        {:ok, update_in(model, [:players, name], p)}
+        case Player.select(model.players[name], card) do
+          {:ok, player} ->
+            players = put_in(model.players, [name], player)
+            {:ok, %__MODULE__{model | players: players}}
+          {:error, reason} ->
+            {:error, reason}
+        end
+    end
+  end
+
+  @spec process_round(t) :: success | error
+  def process_round(model) do
+    cond do
+      Enum.any?(model.players, fn {_name, player} -> Player.no_selection?(player) end) ->
+        {:error, :missing_selection}
+      true ->
+        # model.players
+        # |> Map.values
+        # |> Enum.sort_by(fn {_name, player} -> player. end)
+        {:ok, model}
     end
   end
 
@@ -156,38 +177,24 @@ defmodule Game.Model do
       "status: #{model.status}"
     end
 
-    defp document_players(%Game.Model{players: players}) when players in [%{}, nil] do
+    defp document_players(%Game.Model{players: []}) do
       "players: none"
     end
 
     defp document_players(model) do
       model.players
-      |> Enum.map(fn {name, state} -> "#{name}: #{document_cards(state.hand, state.played)}" end)
+      |> Enum.map(fn {_name, player} -> Kernel.inspect player end)
       |> fold_doc(&line/2)
       |> nested("players")
     end
 
-    defp document_cards(no_cards, _) when no_cards in [[], nil] do
-      "no cards"
-    end
-
-    defp document_cards(cards, {head, _} = _played_card) do
-      cards
-      |> Enum.map(fn {h, _} = card -> document_card(card, h == head) end)
-      |> Enum.join(", ")
-    end
-
-    defp document_card(card, played \\ false)
-    defp document_card({head, _}, true), do: concat(["[", head, "]"])
-    defp document_card({head, _}, _), do: head
-
-    defp document_table(%Game.Model{table: table}) when table in [[], nil] do
+    defp document_table(%Game.Model{table: []}) do
       "table: empty"
     end
 
     defp document_table(model) do
       model.table
-      |> Enum.map(fn card -> document_card(card) end)
+      |> Enum.map(fn card -> Kernel.inspect card end)
       |> fold_doc(&line/2)
       |> nested("table")
     end

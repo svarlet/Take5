@@ -44,7 +44,7 @@ defmodule Game.Mixfile do
   defp deps do
     [{:dialyze, "~> 0.2.1", only: [:dev, :test]},
      {:credo, "~> 0.7", only: :dev},
-     {:quixir, "~> 0.9", only: :test},
+     {:propcheck, "~> 0.0.1", only: :test},
      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
   end

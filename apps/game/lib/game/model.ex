@@ -147,6 +147,8 @@ defmodule Game.Model do
   @spec process_round(t) :: success | error
   def process_round(model) do
     cond do
+      !started?(model) ->
+        {:error, :game_not_started}
       Enum.any?(model.players, fn {_name, player} -> Player.no_selection?(player) end) ->
         {:error, :missing_selection}
       true ->

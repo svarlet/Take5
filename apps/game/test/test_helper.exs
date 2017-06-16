@@ -27,6 +27,14 @@ defmodule TestHelper do
 
   def hand_size_gen, do: integer(0, 10)
 
+  def hand_size_gen(at_least: min, at_most: max) when min in 0..10 and max in min..10 do
+    integer(min, max)
+  end
+
+  def hand_size_gen(at_least: min) when min in 0..10 do
+    integer(min, 10)
+  end
+
   def hand_gen(min_size \\ 0, max_size \\ 10) do
     let size <- integer(min_size, max_size) do
       deck()
@@ -77,13 +85,20 @@ defmodule TestHelper do
   identical names and cards in common, which is impossible in a
   regular game.
   """
-  def players_gen(at_least, upto) do
-    let {qtity, hand_size} <- {integer(at_least, upto), hand_size_gen()} do
-      deck()
-      |> Enum.shuffle
-      |> Enum.chunk(hand_size)
-      |> Enum.zip(Enum.take(@names, qtity))
-      |> Enum.map(fn {hand, name} -> Player.new(name, hand) end)
+  def players_gen(players: [at_least: pmin, at_most: pmax], cards: card_specs) do
+    let {p_count, hand_size} <- {integer(pmin, pmax), hand_size_gen(card_specs)} do
+      case hand_size do
+        0 ->
+          @names
+          |> Enum.take(p_count)
+          |> Enum.map(&Player.new/1)
+        _ ->
+          deck()
+          |> Enum.shuffle
+          |> Enum.chunk(hand_size)
+          |> Enum.zip(Enum.take(@names, p_count))
+          |> Enum.map(fn {hand, name} -> Player.new(name, hand) end)
+      end
     end
   end
 

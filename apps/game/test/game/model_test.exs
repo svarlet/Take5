@@ -16,14 +16,6 @@ defmodule Game.ModelTest do
     |> Enum.reduce(model, fn p, m -> m |> Model.add_player(p) |> elem(1) end)
   end
 
-  defp add_players(model, players) do
-    Enum.reduce(players, model, fn (player, model) ->
-      model
-      |> Model.add_player(player)
-      |> elem(1)
-    end)
-  end
-
   describe "a model is initialized with" do
     setup [:create_model]
 
@@ -251,38 +243,13 @@ defmodule Game.ModelTest do
         |> Enum.map(&select_first_card/1)
         |> List.insert_at(0, player)
         |> Enum.shuffle
+        |> Enum.into(%{}, fn player -> {player.name, player} end)
 
-        {:ok, model} = context.model
-        |> add_players(all_players)
-        |> Model.start
+        model = %Model{context.model | players: all_players, status: :started}
 
         {:error, :missing_selection} == Model.process_round(model)
       end
     end
-
-    # test "when all players have selected a card, process_round succeeds", context do
-    #   ptest players: int(min: 2, max: 10) do
-    #     with model <- add_players(context.model, players),
-    #          {:ok, model} <- Model.start(model) do
-
-    #       select_first = fn player ->
-    #         {:ok, p} = Player.select(player, hd(player.hand))
-    #         p
-    #       end
-
-    #       updated_players = model.players
-    #       |> Enum.map(fn {name, player} -> {name, select_first.(player)} end)
-    #       |> Enum.into(Map.new)
-
-    #       model = %Model{players: updated_players}
-
-    #       assert {:ok, _} = Model.process_round(model)
-
-    #     else
-    #       error -> flunk "Could not setup the game. (reason: #{inspect error})"
-    #     end
-    #   end
-    # end
 
     defp select_first_card(%Player{hand: [card | _]} = player) do
       player
@@ -292,14 +259,13 @@ defmodule Game.ModelTest do
 
     property "when all players have selected a card, process_round succeeds", [:quiet], context do
       forall players <- players_gen(players: [at_least: 2, at_most: 10], cards: [at_least: 1]) do
-        all_players = Enum.map(players, &select_first_card/1)
+        all_players = players
+        |> Enum.map(&select_first_card/1)
+        |> Enum.into(%{}, fn player -> {player.name, player} end)
 
-        result = context.model
-        |> add_players(all_players)
-        |> Model.start()
-        |> Model.process_round()
+        model = %Model{context.model | players: all_players, status: :started}
 
-        match?({:ok, _}, result)
+        match?({:ok, _}, Model.process_round(model))
       end
 
     end

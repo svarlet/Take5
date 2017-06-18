@@ -235,37 +235,20 @@ defmodule Game.ModelTest do
       |> Model.process_round()
     end
 
-    property "process_round returns an error if any player hasn't selected a card", [:quiet], context do
-      forall players <- players_gen(players: [at_least: 2, at_most: 10], cards: [at_least: 1]) do
-        [player | others] = players
-
-        all_players = others
-        |> Enum.map(&select_first_card/1)
-        |> List.insert_at(0, player)
-        |> Enum.shuffle
-        |> Enum.into(%{}, fn player -> {player.name, player} end)
-
-        model = %Model{context.model | players: all_players, status: :started}
-
-        {:error, :missing_selection} == Model.process_round(model)
+    property "process_round returns an error if any player hasn't selected a card", [:quiet], _context do
+      forall model <- model_gen() do
+        {:error, :missing_selection} == model
+        |> select_cards(players: :all_but_one)
+        |> Model.process_round
       end
     end
 
-    defp select_first_card(%Player{hand: [card | _]} = player) do
-      player
-      |> Player.select(card)
-      |> elem(1)
-    end
-
-    property "when all players have selected a card, process_round succeeds", [:quiet], context do
-      forall players <- players_gen(players: [at_least: 2, at_most: 10], cards: [at_least: 1]) do
-        all_players = players
-        |> Enum.map(&select_first_card/1)
-        |> Enum.into(%{}, fn player -> {player.name, player} end)
-
-        model = %Model{context.model | players: all_players, status: :started}
-
-        match?({:ok, _}, Model.process_round(model))
+    property "when all players have selected a card, process_round succeeds", [:quiet], _context do
+      forall model <- model_gen() do
+        result = model
+        |> select_cards(players: :all)
+        |> Model.process_round
+        match?({:ok, _}, result)
       end
 
     end

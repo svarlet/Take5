@@ -5,7 +5,7 @@ defmodule TestHelper do
 
   import Game.Model, only: [deck: 0]
 
-  alias Game.Player
+  alias Game.{Model, Player}
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
@@ -100,6 +100,42 @@ defmodule TestHelper do
           |> Enum.map(fn {hand, name} -> Player.new(name, hand) end)
       end
     end
+  end
+
+  def model_gen do
+    let player_count <- integer(2, 10) do
+      @names
+      |> Enum.take(player_count)
+      |> Enum.reduce(%Model{}, fn name, model -> model |> Model.add_player(name) |> elem(1) end)
+      |> Model.start
+      |> elem(1)
+    end
+  end
+
+  def select_first_card(%Player{hand: [card | _]} = player) do
+    player
+    |> Player.select(card)
+    |> elem(1)
+  end
+
+  def select_cards(model, players: :all) do
+    all_players = model.players
+    |> Map.values
+    |> Enum.map(&select_first_card/1)
+    |> Enum.into(%{}, fn player -> {player.name, player} end)
+    %Model{model | players: all_players}
+  end
+
+  def select_cards(model, players: :all_but_one) do
+    [player | others] = Map.values(model.players)
+
+    all_players = others
+    |> Enum.map(&select_first_card/1)
+    |> List.insert_at(0, player)
+    |> Enum.shuffle
+    |> Enum.into(%{}, fn player -> {player.name, player} end)
+
+    %Model{model | players: all_players, status: :started}
   end
 
 end

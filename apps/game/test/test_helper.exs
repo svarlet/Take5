@@ -46,8 +46,6 @@ defmodule TestHelper do
   @doc """
   This generator generates a player with a random name and a
   hand of 0 to 10 random cards.
-  To generate multiple players at once, use `players_gen`
-  instead.
   """
   def player_gen() do
     player_gen(cards: [at_least: 0, at_most: 10])
@@ -73,35 +71,8 @@ defmodule TestHelper do
   end
 
   @doc """
-  This generator generates a bounded random number of players.
-
-  Every player will have a unique name, a hand of unique
-  random cards and a hand of the same size than the players
-  generated in the same batch.
-
-  It is particulary useful if multiple players needs to be created
-  with an assigned hand from a common deck. Using the `player_gen`
-  for this task would certainly generate some players with
-  identical names and cards in common, which is impossible in a
-  regular game.
+  This generator generates and starts models of 2 to 10 players.
   """
-  def players_gen(players: [at_least: pmin, at_most: pmax], cards: card_specs) do
-    let {p_count, hand_size} <- {integer(pmin, pmax), hand_size_gen(card_specs)} do
-      case hand_size do
-        0 ->
-          @names
-          |> Enum.take(p_count)
-          |> Enum.map(&Player.new/1)
-        _ ->
-          deck()
-          |> Enum.shuffle
-          |> Enum.chunk(hand_size)
-          |> Enum.zip(Enum.take(@names, p_count))
-          |> Enum.map(fn {hand, name} -> Player.new(name, hand) end)
-      end
-    end
-  end
-
   def model_gen do
     let player_count <- integer(2, 10) do
       @names
@@ -112,12 +83,22 @@ defmodule TestHelper do
     end
   end
 
-  def select_first_card(%Player{hand: [card | _]} = player) do
+  defp select_first_card(%Player{hand: [card | _]} = player) do
     player
     |> Player.select(card)
     |> elem(1)
   end
 
+  @doc """
+  This helper selects a card on behalf of players of the provided model.
+
+  This function takes a model and a keyword which specifies how many
+  selections should occur: `players: :all` to select a card for every
+  player of the model, `players: :all_but_one` to select a card for
+  all but a random player of the model.
+
+  The selected card is the first card of the player's hand.
+  """
   def select_cards(model, players: :all) do
     all_players = model.players
     |> Map.values

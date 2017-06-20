@@ -250,7 +250,6 @@ defmodule Game.ModelTest do
         |> Model.process_round
         match?({:ok, _}, result)
       end
-
     end
 
   end

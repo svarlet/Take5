@@ -26,19 +26,11 @@ defmodule Game.Model do
 
   """
 
-  import Game.Card, only: [card: 2]
+  import Game.Card, only: [card: 1]
 
   alias Game.{Card, Player, Table}
 
-  @deck (for n <- 1..104, into: MapSet.new do
-          cond do
-            n == 55 -> card(55, 7)
-            rem(n, 5) == 0 && rem(n, 10) != 0 -> card(n, 2)
-            rem(n, 11) == 0 -> card(n, 5)
-            rem(n, 10) == 0 -> card(n, 3)
-            true -> card(n, 1)
-          end
-        end)
+  @deck (1..104 |> Enum.map(&card/1) |> MapSet.new)
 
   @spec deck() :: MapSet.t
   def deck(), do: @deck

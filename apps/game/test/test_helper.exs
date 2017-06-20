@@ -4,19 +4,54 @@ defmodule TestHelper do
   use PropCheck
 
   import Game.Model, only: [deck: 0]
+  import Game.Card, only: [card: 1]
 
-  alias Game.{Model, Player}
+  alias Game.{Model, Player, Table}
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
   def draw_cards(n) do
     deck()
     |> Enum.shuffle
-    |> Enum.take(n)
+    |> Enum.split(n)
+  end
+
+  def table_gen do
+    let row_sizes <- vector(4, integer(1, 5)) do
+      {cards, deck} = row_sizes
+      |> Enum.sum
+      |> draw_cards
+
+      [row0, row1, row2, row3] = cards
+      |> multisplit(row_sizes)
+
+      table = %Table{row_0: row0, row_1: row1, row_2: row2, row_3: row3}
+
+      {table, MapSet.new(deck)}
+    end
+  end
+
+  defp multisplit(list, [_size]) do
+    [list]
+  end
+
+  defp multisplit(list, [size | sizes]) do
+    {elements, rest} = Enum.split(list, size)
+    [elements | multisplit(rest, sizes)]
+  end
+
+  def pair_of_cards_gen() do
+    let pivot <- integer(1, 103) do
+      let {lower_head, higher_head} <- {integer(1, pivot), integer(pivot + 1, 104)} do
+        {card(lower_head), card(higher_head)}
+      end
+    end
   end
 
   def random_hand(size) do
-    draw_cards(size)
+    size
+    |> draw_cards
+    |> elem(0)
   end
 
   def remaining_deck(hands) do

@@ -24,6 +24,13 @@ defmodule Game.Table do
     %__MODULE__{table | row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]}
   end
 
+  @doc """
+  Put a card on the table.
+  """
+  def put(table, _card) do
+    table
+  end
+
   #
   # INSPECT PROTOCOL IMPLEMENTATION
   #
@@ -34,7 +41,7 @@ defmodule Game.Table do
     def inspect(table, _oppts) do
       table
       |> Map.take([:row_0, :row_1, :row_2, :row_3])
-      |> Enum.map(fn row_id, cards -> "#{row_id}: #{cards}" end)
+      |> Enum.map(fn {row_id, cards} -> "#{row_id}: #{inspect cards}" end)
       |> fold_doc(&line/2)
     end
   end

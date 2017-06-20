@@ -6,12 +6,10 @@ defmodule Game.Card do
   1, 2, 3, 5, or 7. The `Inspect` protocol is implemented to show only the head
   of the card in order to get a more concise output.
 
-  A macro is provided to simplify the manipulation of cards.
-
   ## Examples
 
-      iex> import Game.Card, only: :macros
-      iex> card(10, 3)
+      iex> import Game.Card
+      iex> card(10)
       %Game.Card{head: 10, penalty: 3}
 
   """
@@ -23,15 +21,35 @@ defmodule Game.Card do
   @enforce_keys [:head, :penalty]
   defstruct head: 1, penalty: 1
 
-  defmacro card(head, penalty) do
-    quote do
-      %Game.Card{head: unquote(head), penalty: unquote(penalty)}
+  def card(head) do
+    %__MODULE__{head: head, penalty: penalty(head)}
+  end
+
+  def penalty(head) do
+    cond do
+      head == 55 -> 7
+      rem(head, 5) == 0 && rem(head, 10) != 0 -> 2
+      rem(head, 11) == 0 -> 5
+      rem(head, 10) == 0 -> 3
+      true -> 1
     end
   end
 
+  def compare(c1, c2) do
+    cond do
+      c1.head > c2.head -> :gt
+      c1.head == c2.head -> :eq
+      c1.head < c2.head -> :lt
+    end
+  end
+
+  #
+  # INSPECT PROTOCOL IMPLEMENTATION
+  #
+
   defimpl Inspect do
     def inspect(card, _opts) do
-      "#{card.head}"
+      String.pad_leading("#{card.head}", 3)
     end
   end
 end

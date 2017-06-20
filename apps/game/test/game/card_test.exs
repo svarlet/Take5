@@ -1,9 +1,16 @@
 defmodule Game.CardTest do
   use ExUnit.Case, async: true
+  use PropCheck
 
-  # test "sort/2 returns true when the head of the first card is lower or equal to the head of the second card" do
-  #   ptest pivot: int(min: 2, max: 103), card1: card_gen(max: ^pivot), card2: card_gen(min: ^pivot) do
-  #     assert Card.sort(card1, card2)
-  #   end
-  # end
+  import TestHelper
+
+  alias Game.Card
+
+  property "compare returns :lt | :eq | :gt if the first card is lower | equal | greater than the second card" do
+    forall {lower_card, higher_card} <- pair_of_cards_gen() do
+      Card.compare(lower_card, higher_card) == :lt
+      && Card.compare(higher_card, lower_card) == :gt
+      && Card.compare(lower_card, lower_card) == :eq
+    end
+  end
 end

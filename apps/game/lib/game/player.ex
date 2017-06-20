@@ -11,20 +11,20 @@ defmodule Game.Player do
       %Game.Player{name: "Martin"}
 
       iex> alias Game.Player
-      iex> import Game.Card, only: :macros
-      iex> Player.new("John") |> Player.has_card?(card(1, 1))
+      iex> import Game.Card, only: [card: 1]
+      iex> Player.new("John") |> Player.has_card?(card(1))
       false
 
       iex> alias Game.Player
-      iex> import Game.Card, only: :macros
-      iex> hand = [card(1, 1), card(2, 1), card(20, 3)]
-      iex> "Gerald" |> Player.new(hand) |> Player.has_card?(card(2, 1))
+      iex> import Game.Card, only: [card: 1]
+      iex> hand = [card(1), card(2), card(20)]
+      iex> "Gerald" |> Player.new(hand) |> Player.has_card?(card(2))
       true
 
       iex> alias Game.Player
-      iex> import Game.Card, only: :macros
-      iex> hand = [card(1, 1), card(2, 1), card(20, 3)]
-      iex> {:ok, player} = "John" |> Player.new(hand) |> Player.select(card(2, 1))
+      iex> import Game.Card, only: [card: 1]
+      iex> hand = [card(1), card(2), card(20)]
+      iex> {:ok, player} = "John" |> Player.new(hand) |> Player.select(card(2))
       iex> player.selected
       %Game.Card{head: 2, penalty: 1}
 

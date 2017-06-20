@@ -9,10 +9,14 @@ defmodule TestHelper do
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
-  def random_hand(size) do
+  def draw_cards(n) do
     deck()
     |> Enum.shuffle
-    |> Enum.take(size)
+    |> Enum.take(n)
+  end
+
+  def random_hand(size) do
+    draw_cards(size)
   end
 
   def remaining_deck(hands) do

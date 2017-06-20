@@ -4,7 +4,7 @@ defmodule Game.ModelTest do
 
   import TestHelper
 
-  alias Game.{Model, Card, Player}
+  alias Game.{Model, Card, Player, Table}
 
   defp create_model(_) do
     [model: %Model{}]
@@ -28,7 +28,7 @@ defmodule Game.ModelTest do
     end
 
     test "an empty table", context do
-      assert context.model.table == %{0 => [], 1 => [], 2 => [], 3 =>[]}
+      assert context.model.table == Table.new
     end
 
     test "a deck of 104 unique cards with penalties", context do

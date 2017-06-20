@@ -28,6 +28,8 @@ defmodule Game.Model do
 
   import Game.Card, only: [card: 2]
 
+  alias Game.{Card, Player, Table}
+
   @deck (for n <- 1..104, into: MapSet.new do
           cond do
             n == 55 -> card(55, 7)
@@ -41,15 +43,11 @@ defmodule Game.Model do
   @spec deck() :: MapSet.t
   def deck(), do: @deck
 
-  @empty_table %{0 => [], 1 => [], 2 => [], 3 => []}
-
-  alias Game.{Card, Player}
-
   @doc false
-  defstruct status: :init, players: Map.new, table: @empty_table, deck: @deck
+  defstruct status: :init, players: Map.new, table: Table.new, deck: @deck
 
   @type row :: list(Card.t)
-  @type t :: %__MODULE__{status: :init | :started, players: Map.t, table: %{0 => row, 1 => row, 2 => row, 3 => row}, deck: MapSet.t}
+  @type t :: %__MODULE__{status: :init | :started, players: Map.t, table: Table.t, deck: MapSet.t}
   @type success :: {:ok, t}
   @type error :: {:error, atom}
 
@@ -166,6 +164,8 @@ defmodule Game.Model do
   defimpl Inspect do
     import Inspect.Algebra
 
+    alias Game.Model
+
     @nesting 2
 
     def inspect(model, _opts) do
@@ -176,11 +176,18 @@ defmodule Game.Model do
     end
 
     defp document_status(model) do
-      "status: #{model.status}"
+      model.status
+      |> nested("status")
     end
 
-    defp document_players(%Game.Model{players: []}) do
-      "players: none"
+    defp document_table(%Model{table: table}) do
+      table
+      |> nested("table")
+    end
+
+    defp document_players(%Model{players: []}) do
+      "none"
+      |> nested("players")
     end
 
     defp document_players(model) do
@@ -190,18 +197,7 @@ defmodule Game.Model do
       |> nested("players")
     end
 
-    defp document_table(%Game.Model{table: []}) do
-      "table: empty"
-    end
-
-    defp document_table(model) do
-      model.table
-      |> Enum.map(fn card -> Kernel.inspect card end)
-      |> fold_doc(&line/2)
-      |> nested("table")
-    end
-
-    defp nested(items, title) do
+    def nested(items, title) do
       "#{title}:"
       |> line(items)
       |> nest(@nesting)

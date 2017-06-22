@@ -3,7 +3,7 @@ defmodule Game.Table do
   This module represents a table.
 
   A table has 4 rows represented as lists of cards. Initially, all rows are
-  empty.
+  empty. The head of every row is the last card put in the row.
   """
 
   alias Game.Card

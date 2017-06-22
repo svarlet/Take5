@@ -3,4 +3,5 @@ defmodule GameTest do
   doctest Game.Model
   doctest Game.Card
   doctest Game.Player
+  doctest Game.Table
 end

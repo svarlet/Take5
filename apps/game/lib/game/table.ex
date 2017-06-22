@@ -4,6 +4,18 @@ defmodule Game.Table do
 
   A table has 4 rows represented as lists of cards. Initially, all rows are
   empty. The head of every row is the last card put in the row.
+
+  ## Examples
+
+      iex> Game.Table.new()
+      %Game.Table{}
+
+      iex> Game.Table.new
+      ...> |> Game.Table.set(for head <- 1..4, do: Game.Card.card(head))
+      ...> |> Game.Table.row_heads
+      ...> |> Enum.map(fn card -> card.head end)
+      [1, 2, 3, 4]
+
   """
 
   alias Game.Card

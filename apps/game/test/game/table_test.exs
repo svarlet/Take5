@@ -29,22 +29,48 @@ defmodule Game.TableTest do
     assert table.row_3 == [c3]
   end
 
-  property "putting a card" do
-    forall {table, deck} <- table_gen() do
-      card_to_play = Enum.random(deck)
+  property "rows/1 returns the 4 rows of cards" do
+    forall {table, _deck} <- table_gen() do
+      [table.row_0, table.row_1, table.row_2, table.row_3] == Table.rows(table)
+    end
+  end
 
-      IO.puts "Card to play: #{card_to_play}"
-
-      closest_card = table
+  property "row_heads/1 returns a list of the last card put in each row" do
+    forall {table, _deck} <- table_gen() do
+      Table.row_heads(table) == table
+      |> Map.take(~w(row_0 row_1 row_2 row_3)a)
       |> Map.values
-      |> Enum.map(List.first)
+      |> Enum.map(&List.first/1)
+    end
+  end
+
+  property "putting a card higher than at least one of the table cards" do
+    table_and_card_gen =
+      let {table, deck} <- table_gen() do
+        deck_cards = MapSet.to_list(deck)
+        smaller_than = fn ref_card ->
+          fn a_card -> Card.compare(a_card, ref_card) == :lt end
+        end
+        higher_card_gen = such_that card <- oneof(deck_cards), when: Enum.any?(Table.row_heads(table), smaller_than.(card))
+        let card <- higher_card_gen do
+          {card, table}
+        end
+      end
+
+    forall {card_to_play, table} <- table_and_card_gen do
+      row_heads = Table.row_heads(table)
+
+      closest_card = row_heads
       |> Enum.filter(fn card -> Card.compare(card, card_to_play) == :lt end)
       |> Enum.max_by(fn card -> card.head end)
 
-      assert table
+      final_rows = table
       |> Table.put(card_to_play)
-      |> Map.values
-      |> Enum.any?(fn row -> row == [card_to_play | closest_card] end)
+      |> Table.rows
+
+      1 == final_rows
+      |> Enum.filter(fn row -> match?([^card_to_play, ^closest_card | _], row) end)
+      |> Enum.count
     end
   end
 end

@@ -13,4 +13,10 @@ defmodule Game.CardTest do
       && Card.compare(lower_card, lower_card) == :eq
     end
   end
+
+  property "smaller_than/2 returns true when a card is smaller than a reference card" do
+    forall {low, high} <- pair_of_cards_gen() do
+      Card.smaller_than(high, low) && !Card.smaller_than(low, high)
+    end
+  end
 end

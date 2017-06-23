@@ -45,7 +45,8 @@ defmodule Game.Mixfile do
     [{:dialyze, "~> 0.2.1", only: [:dev, :test]},
      {:credo, "~> 0.7", only: :dev},
      {:propcheck, "~> 0.0.1", only: :test},
-     {:ex_doc, "~> 0.16", only: :dev, runtime: false}
+     {:ex_doc, "~> 0.16", only: :dev, runtime: false},
+     {:quark, "~> 2.2"}
     ]
   end
 end

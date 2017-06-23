@@ -48,10 +48,7 @@ defmodule Game.TableTest do
     table_and_card_gen =
       let {table, deck} <- table_gen() do
         deck_cards = MapSet.to_list(deck)
-        smaller_than = fn ref_card ->
-          fn a_card -> Card.compare(a_card, ref_card) == :lt end
-        end
-        higher_card_gen = such_that card <- oneof(deck_cards), when: Enum.any?(Table.row_heads(table), smaller_than.(card))
+        higher_card_gen = such_that card <- oneof(deck_cards), when: Enum.any?(Table.row_heads(table), Card.smaller_than(card))
         let card <- higher_card_gen do
           {card, table}
         end
@@ -73,4 +70,5 @@ defmodule Game.TableTest do
       |> Enum.count
     end
   end
+
 end

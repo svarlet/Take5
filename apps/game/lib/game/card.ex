@@ -14,6 +14,8 @@ defmodule Game.Card do
 
   """
 
+  use Quark
+
   @type head :: 1..104
   @type penalty :: [1 | 2 | 3 | 5 | 7]
   @type t :: %__MODULE__{head: head, penalty: penalty}
@@ -41,6 +43,10 @@ defmodule Game.Card do
       c1.head == c2.head -> :eq
       c1.head < c2.head -> :lt
     end
+  end
+
+  defpartial smaller_than(ref_card, a_card) do
+    compare(a_card, ref_card) == :lt
   end
 
   #

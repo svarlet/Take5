@@ -10,6 +10,12 @@ defmodule TestHelper do
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
+  def card_gen do
+    let head <- integer(1, 104) do
+      card(head)
+    end
+  end
+
   def draw_cards(n) do
     deck()
     |> Enum.shuffle
@@ -38,6 +44,12 @@ defmodule TestHelper do
   defp multisplit(list, [size | sizes]) do
     {elements, rest} = Enum.split(list, size)
     [elements | multisplit(rest, sizes)]
+  end
+
+  def card_and_table_gen do
+    let {table, deck} <- table_gen() do
+      {Enum.random(deck), table}
+    end
   end
 
   def pair_of_cards_gen() do

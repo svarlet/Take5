@@ -66,7 +66,10 @@ defmodule Game.Table do
   """
   @spec put(t, Card.t) :: t
   def put(table, card) do
-    Map.update(table, row_for_card(table, card), @empty_row, fn row -> [card | row] end)
+    case row_for_card(table, card) do
+      :no_matching_row -> # todo: handle this case ot it won't compile :D
+      row_id -> Map.update(table, row_id, @empty_row, fn row -> [card | row] end)
+    end
   end
 
   defp row_for_card(table, card) do
@@ -75,15 +78,14 @@ defmodule Game.Table do
                 row_2: [c2 | _],
                 row_3: [c3 | _]} = table
 
-    relevant_row_head = [c0, c1, c2, c3]
-    |> Enum.filter(fn a_card -> Card.compare(a_card, card) == :lt end)
-    |> Enum.max_by(fn card -> card.head end)
+    closest = Card.closest_lower_card(card, row_heads(table))
 
-    case relevant_row_head do
+    case closest do
       ^c0 -> :row_0
       ^c1 -> :row_1
       ^c2 -> :row_2
       ^c3 -> :row_3
+      _ -> :no_matching_row
     end
   end
 

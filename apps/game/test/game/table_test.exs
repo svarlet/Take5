@@ -44,57 +44,48 @@ defmodule Game.TableTest do
     end
   end
 
-  # property "putting a card higher than at least one of the table cards" do
-  #   table_and_card_gen =
-  #     let {table, deck} <- table_gen() do
-  #       deck_cards = MapSet.to_list(deck)
-  #       higher_card_gen = such_that card <- oneof(deck_cards), when: Enum.any?(Table.row_heads(table), Card.smaller_than(card))
-  #       let card <- higher_card_gen do
-  #         {card, table}
-  #       end
-  #     end
-
-  #   forall {card_to_play, table} <- table_and_card_gen do
-  #     row_heads = Table.row_heads(table)
-
-  #     closest_card = row_heads
-  #     |> Enum.filter(fn card -> Card.compare(card, card_to_play) == :lt end)
-  #     |> Enum.max_by(fn card -> card.head end)
-
-  #     final_rows = table
-  #     |> Table.put(card_to_play)
-  #     |> Table.rows
-
-  #     1 == final_rows
-  #     |> Enum.filter(fn row -> match?([^card_to_play, ^closest_card | _], row) end)
-  #     |> Enum.count
-  #   end
-  # end
-
   property "a card is put in only one row" do
     forall {card, table} <- card_and_table_gen() do
-      1 == table
-      |> Table.put(card)
-      |> Table.row_heads
-      |> Enum.filter(fn c -> c == card end)
-      |> Enum.count
+      closest = Card.closest_lower_card(card, Table.row_heads(table))
+      implies closest != nil do
+        1 == table
+        |> Table.put(card)
+        |> Table.row_heads
+        |> Enum.filter(fn c -> c == card end)
+        |> Enum.count
+      end
     end
   end
 
   property "a card is put in the row with the closest lower head" do
     forall {card, table} <- card_and_table_gen() do
-      implies Card.closest_lower_card(card, Table.row_heads(table)) != nil do
-        t = Table.put(table, card)
-        closest = Card.closest_lower_card(card, Table.row_heads(table))
-        Enum.any?(Table.rows(t), &(match?([^card, ^closest | _], &1)))
+      closest = Card.closest_lower_card(card, Table.row_heads(table))
+      implies closest != nil do
+        table
+        |> Table.put(card)
+        |> Table.rows
+        |> Enum.any?(fn r -> Enum.take(r, 2) == [card, closest] end)
       end
     end
   end
 
   property "a card replaces a row when it is put in a row with 5 cards" do
     forall {card, table} <- card_and_table_gen() do
-      false
+      implies Enum.any?(Table.rows(table), fn row -> Enum.count(row) == 5 end) do
+        {row_id, row} = row_with_5_cards(table)
+        implies hd(row) == Card.closest_lower_card(card, Table.row_heads(table)) do
+          [card] == table
+          |> Table.put(card)
+          |> Map.get(row_id)
+        end
+      end
     end
+  end
+
+  defp row_with_5_cards(table) do
+    table
+    |> Map.take(~w(row_0 row_1 row_2 row_3)a)
+    |> Enum.find(fn {_row_id, row} -> Enum.count(row) == 5 end)
   end
 
 end

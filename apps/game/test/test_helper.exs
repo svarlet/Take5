@@ -29,6 +29,7 @@ defmodule TestHelper do
       |> draw_cards
 
       [row0, row1, row2, row3] = cards
+      |> Enum.sort_by(fn c -> c.head end, &>=/2)
       |> multisplit(row_sizes)
 
       table = %Table{row_0: row0, row_1: row1, row_2: row2, row_3: row3}

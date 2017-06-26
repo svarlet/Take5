@@ -51,6 +51,16 @@ defmodule Game.Table do
   end
 
   @doc """
+  Returns a list of the last card of each row using the provided predicate.
+  """
+  @spec row_heads_by(t, (Card.t -> boolean())) :: list(Card.t)
+  def row_heads_by(table, predicate) do
+    table
+    |> row_heads
+    |> Enum.filter(predicate)
+  end
+
+  @doc """
   Initialize a table with the 4 provided cards.
   """
   @spec set(t, nonempty_list(Card.t)) :: t
@@ -67,7 +77,7 @@ defmodule Game.Table do
   @spec put(t, Card.t) :: t
   def put(table, card) do
     case row_for_card(table, card) do
-      :no_matching_row -> # todo: handle this case ot it won't compile :D
+      :no_matching_row -> {:error, {:choose_row, card}}
       row_id -> Map.update(table, row_id, @empty_row, fn row -> [card | row] end)
     end
   end

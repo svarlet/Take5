@@ -61,6 +61,16 @@ defmodule Game.Table do
   end
 
   @doc """
+  Returns true if any head satisfies the given predicate.
+  """
+  @spec any_head?(t, (Card.t -> boolean())) :: true | false
+  def any_head?(table, predicate) do
+    table
+    |> row_heads()
+    |> Enum.any?(predicate)
+  end
+
+  @doc """
   Initialize a table with the 4 provided cards.
   """
   @spec set(t, nonempty_list(Card.t)) :: t

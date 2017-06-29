@@ -47,6 +47,20 @@ defmodule Game.TableTest do
     end
   end
 
+  property "any_head?/2 returns true if any head satisfies the given predicate" do
+    forall {pivot_card, table} <- card_and_table_gen() do
+      predicate = Card.smaller_than(pivot_card)
+      Table.any_head?(table, predicate) == (table |> Table.row_heads_by(predicate) |> Enum.count != 0)
+    end
+  end
+
+  property "any_head?/2 returns false when no head satisfies the given predicate" do
+    forall {table, _deck} <- table_gen() do
+      predicate = fn _ -> false end
+      Table.any_head?(table, predicate) == false
+    end
+  end
+
   property "returns {:error, {:choose_row, card}} when a card cannot be stacked on any row" do
     forall {card, table} <- card_and_table_gen() do
       implies table |> Table.row_heads |> Enum.all?(fn head -> Card.compare(head, card) == :gt end) do
@@ -57,10 +71,12 @@ defmodule Game.TableTest do
 
   property "a card is put in only one row" do
     forall {card, table} <- card_and_table_gen() do
-      1 == table
-      |> Table.put(card)
-      |> Table.row_heads_by(fn c -> c == card end)
-      |> Enum.count
+      implies Table.any_head?(table, Card.smaller_than(card)) do
+        1 == table
+        |> Table.put(card)
+        |> Table.row_heads_by(fn c -> c == card end)
+        |> Enum.count
+      end
     end
   end
 

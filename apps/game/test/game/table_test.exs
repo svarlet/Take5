@@ -93,22 +93,9 @@ defmodule Game.TableTest do
   end
 
   property "a card replaces a row when it is put in a row with 5 cards" do
-    forall {card, table} <- card_and_table_gen() do
-      implies Enum.any?(Table.rows(table), fn row -> Enum.count(row) == 5 end) do
-        {row_id, row} = find_row_with_5_cards(table)
-        implies hd(row) == Card.closest_lower_card(card, Table.row_heads(table)) do
-          [card] == table
-          |> Table.put(card)
-          |> Map.get(row_id)
-        end
-      end
+    forall {card, table} <- card_and_table_with_full_row_gen() do
+      Table.put(table, card).row_0 == [card]
     end
-  end
-
-  defp find_row_with_5_cards(table) do
-    table
-    |> Map.take(~w(row_0 row_1 row_2 row_3)a)
-    |> Enum.find(fn {_row_id, row} -> Enum.count(row) == 5 end)
   end
 
 end

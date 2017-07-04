@@ -171,4 +171,19 @@ defmodule TestHelper do
     %Model{model | players: all_players, status: :started}
   end
 
+  def card_and_table_with_full_row_gen() do
+    let next_card_head <- integer(6, 101) do
+      full_row = (next_card_head - 1)..(next_card_head - 5)
+      |> Enum.map(&card/1)
+
+      {card(next_card_head),
+       %Table{
+        row_0: full_row,
+        row_1: [card(next_card_head + 1)],
+        row_2: [card(next_card_head + 2)],
+        row_3: [card(next_card_head + 3)],
+       }
+      }
+    end
+  end
 end

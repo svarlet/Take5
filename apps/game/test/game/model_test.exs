@@ -28,7 +28,7 @@ defmodule Game.ModelTest do
     end
 
     test "an empty table", context do
-      assert context.model.table == Table.new
+      assert context.model.table == %Table{}
     end
 
     test "a deck of 104 unique cards with penalties", context do

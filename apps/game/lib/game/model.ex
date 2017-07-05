@@ -31,12 +31,13 @@ defmodule Game.Model do
   alias Game.{Card, Player, Table}
 
   @deck (1..104 |> Enum.map(&card/1) |> MapSet.new)
+  @empty_table %Table{}
 
   @spec deck() :: MapSet.t
   def deck(), do: @deck
 
   @doc false
-  defstruct status: :init, players: Map.new, table: Table.new, deck: @deck
+  defstruct status: :init, players: Map.new, table: @empty_table, deck: @deck
 
   @type row :: list(Card.t)
   @type t :: %__MODULE__{status: :init | :started, players: Map.t, table: Table.t, deck: MapSet.t}

@@ -7,12 +7,9 @@ defmodule Game.Table do
 
   ## Examples
 
-      iex> Game.Table.new()
-      %Game.Table{}
-
-      iex> Game.Table.new
-      ...> |> Game.Table.set(for head <- 1..4, do: Game.Card.card(head))
-      ...> |> Game.Table.row_heads
+      iex> %Game.Table{}
+      ...> |> Game.Table.set(Game.Card.card(1), Game.Card.card(2), Game.Card.card(3), Game.Card.card(4))
+      ...> |> Game.Table.row_heads()
       ...> |> Enum.map(fn card -> card.head end)
       [1, 2, 3, 4]
 
@@ -25,14 +22,6 @@ defmodule Game.Table do
   @empty_row []
 
   defstruct row_0: @empty_row, row_1: @empty_row, row_2: @empty_row, row_3: @empty_row
-
-  @doc """
-  Create a new table with empty rows.
-  """
-  @spec new() :: t
-  def new do
-    %__MODULE__{}
-  end
 
   @doc """
   Returns a list of the 4 rows of the provided table.
@@ -73,8 +62,8 @@ defmodule Game.Table do
   @doc """
   Initialize a table with the 4 provided cards.
   """
-  @spec set(t, nonempty_list(Card.t)) :: t
-  def set(table, [c0, c1, c2, c3]) do
+  @spec set(t, Card.t, Card.t, Card.t, Card.t) :: t
+  def set(table, c0, c1, c2, c3) do
     %__MODULE__{table | row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]}
   end
 

@@ -61,12 +61,6 @@ defmodule TestHelper do
     end
   end
 
-  def random_hand(size) do
-    size
-    |> draw_cards
-    |> elem(0)
-  end
-
   def remaining_deck(hands) do
     dealt_cards_set = hands
     |> Enum.map(&MapSet.new/1)
@@ -171,19 +165,15 @@ defmodule TestHelper do
     %Model{model | players: all_players, status: :started}
   end
 
-  def card_and_table_with_full_row_gen() do
-    let next_card_head <- integer(6, 101) do
-      full_row = (next_card_head - 1)..(next_card_head - 5)
-      |> Enum.map(&card/1)
-
-      {card(next_card_head),
-       %Table{
-        row_0: full_row,
-        row_1: [card(next_card_head + 1)],
-        row_2: [card(next_card_head + 2)],
-        row_3: [card(next_card_head + 3)],
-       }
-      }
+  @spec cards_gen(0..104) :: list(Card.t)
+  def cards_gen(quantity) do
+    let deck <- exactly(Enum.to_list(deck())) do
+      deck
+      |> Enum.shuffle()
+      |> Enum.split(quantity)
+      |> elem(0)
+      |> Enum.sort()
     end
   end
+
 end

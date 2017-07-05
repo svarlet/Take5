@@ -6,12 +6,8 @@ defmodule Game.TableTest do
 
   alias Game.{Card, Table}
 
-  test "create a table" do
-    Table.new
-  end
-
   test "has 4 empty rows" do
-    table = Table.new
+    table = %Table{}
     assert table.row_0 == []
     assert table.row_1 == []
     assert table.row_2 == []
@@ -20,7 +16,7 @@ defmodule Game.TableTest do
 
   property "set table with 4 cards" do
     forall [c0, c1, c2, c3] <- vector(4, card_gen()) do
-      %Table{row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]} == Table.set(Table.new(), [c0, c1, c2, c3])
+      %Table{row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]} == Table.set(%Table{}, c0, c1, c2, c3)
     end
   end
 
@@ -62,39 +58,36 @@ defmodule Game.TableTest do
   end
 
   property "returns {:error, {:choose_row, card}} when a card cannot be stacked on any row" do
-    forall {card, table} <- card_and_table_gen() do
-      implies table |> Table.row_heads |> Enum.all?(fn head -> Card.compare(head, card) == :gt end) do
-        {:error, {:choose_row, card}} == Table.put(table, card)
-      end
+    forall [c1, c2, c3, c4, c5] <- cards_gen(5) do
+      table = %Table{row_0: [c2], row_1: [c3], row_2: [c4], row_3: [c5]}
+      {:error, {:choose_row, c1}} == Table.put(table, c1)
     end
   end
 
   property "a card is put in only one row" do
-    forall {card, table} <- card_and_table_gen() do
-      implies Table.any_head?(table, Card.smaller_than(card)) do
-        1 == table
-        |> Table.put(card)
-        |> Table.row_heads_by(fn c -> c == card end)
-        |> Enum.count
-      end
+    forall [c1, c2, c3, c4, c5] <- cards_gen(5) do
+      1 == %Table{row_0: [c1], row_1: [c2], row_2: [c3], row_3: [c4]}
+      |> Table.put(c5)
+      |> Table.row_heads_by(fn card -> card == c5 end)
+      |> Enum.count()
     end
   end
 
   property "a card is put in the row with the closest lower head" do
-    forall {card, table} <- card_and_table_gen() do
-      closest = Card.closest_lower_card(card, Table.row_heads(table))
-      implies closest != nil do
-        table
-        |> Table.put(card)
-        |> Table.rows
-        |> Enum.any?(fn r -> Enum.take(r, 2) == [card, closest] end)
-      end
+    forall [c1, c2, c3, c4, c5] <- cards_gen(5) do
+      [c5, c4] == %Table{row_0: [c1], row_1: [c2], row_2: [c3], row_3: [c4]}
+      |> Table.put(c5)
+      |> Map.get(:row_3)
     end
   end
 
   property "a card replaces a row when it is put in a row with 5 cards" do
-    forall {card, table} <- card_and_table_with_full_row_gen() do
-      Table.put(table, card).row_0 == [card]
+    forall cards <- cards_gen(9) do
+      {full_row, [card_to_play, c1, c2, c3]} = Enum.split(cards, 5)
+
+      [card_to_play] == %Table{row_0: full_row, row_1: [c1], row_2: [c2], row_3: [c3]}
+      |> Table.put(card_to_play)
+      |> Map.get(:row_0)
     end
   end
 

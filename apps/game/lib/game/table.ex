@@ -73,11 +73,18 @@ defmodule Game.Table do
   The card is placed in one of the rows, following the highest head among
   those with a lower head.
   """
-  @spec put(t, Card.t) :: t
+  @spec put(t, Card.t) :: {:error, {:choose_row, Card.t}} | {:ok, {t, list(Card.t)}}
   def put(table, card) do
     case row_for_card(table, card) do
-      :no_matching_row -> {:error, {:choose_row, card}}
-      row_id -> Map.update(table, row_id, @empty_row, fn row -> [card | row] end)
+      :no_matching_row ->
+        {:error, {:choose_row, card}}
+      row_id ->
+        row = Map.get(table, row_id)
+        if Enum.count(row) == 5 do
+          {:ok, {Map.update(table, row_id, @empty_row, fn _ -> [card] end), row}}
+        else
+          {:ok, {Map.update(table, row_id, @empty_row, fn row -> [card | row] end), []}}
+        end
     end
   end
 

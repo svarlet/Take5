@@ -41,6 +41,7 @@ defmodule Game.Card do
     Enum.map(heads, &card/1)
   end
 
+  @spec penalty(head) :: penalty
   def penalty(head) do
     cond do
       head == 55 -> 7
@@ -51,6 +52,7 @@ defmodule Game.Card do
     end
   end
 
+  @spec compare(t, t) :: :gt | :eq | :lt
   def compare(c1, c2) do
     cond do
       c1.head > c2.head -> :gt

@@ -10,31 +10,25 @@ defmodule TestHelper do
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
-  def card_gen do
-    let head <- integer(1, 104) do
-      card(head)
-    end
-  end
+  @spec cards_gen(0..104) :: {list(Card.t), list(Card.t)}
+  def cards_gen(quantity) do
+    let deck <- exactly(Enum.to_list(deck())) do
+      {cards, rest_of_deck} = deck
+      |> Enum.shuffle()
+      |> Enum.split(quantity)
 
-  def draw_cards(n) do
-    deck()
-    |> Enum.shuffle
-    |> Enum.split(n)
+    {Enum.sort_by(cards, fn c -> c.head end), MapSet.new(rest_of_deck)}
+    end
   end
 
   def table_gen do
     let row_sizes <- vector(4, integer(1, 5)) do
-      {cards, deck} = row_sizes
-      |> Enum.sum
-      |> draw_cards
-
-      [row0, row1, row2, row3] = cards
-      |> Enum.sort_by(fn c -> c.head end, &>=/2)
-      |> multisplit(row_sizes)
-
-      table = %Table{row_0: row0, row_1: row1, row_2: row2, row_3: row3}
-
-      {table, MapSet.new(deck)}
+      quantity_of_cards = Enum.sum(row_sizes)
+      let {cards, deck} <- cards_gen(quantity_of_cards) do
+        [row0, row1, row2, row3] = multisplit(cards, row_sizes)
+        table = %Table{row_0: row0, row_1: row1, row_2: row2, row_3: row3}
+        {table, deck}
+      end
     end
   end
 
@@ -70,16 +64,6 @@ defmodule TestHelper do
   end
 
   def player_name_gen, do: elements(@names)
-
-  def hand_size_gen, do: integer(0, 10)
-
-  def hand_size_gen(at_least: min, at_most: max) when min in 0..10 and max in min..10 do
-    integer(min, max)
-  end
-
-  def hand_size_gen(at_least: min) when min in 0..10 do
-    integer(min, 10)
-  end
 
   def hand_gen(min_size \\ 0, max_size \\ 10) do
     let size <- integer(min_size, max_size) do
@@ -163,17 +147,6 @@ defmodule TestHelper do
     |> Enum.into(%{}, fn player -> {player.name, player} end)
 
     %Model{model | players: all_players, status: :started}
-  end
-
-  @spec cards_gen(0..104) :: list(Card.t)
-  def cards_gen(quantity) do
-    let deck <- exactly(Enum.to_list(deck())) do
-      deck
-      |> Enum.shuffle()
-      |> Enum.split(quantity)
-      |> elem(0)
-      |> Enum.sort()
-    end
   end
 
 end

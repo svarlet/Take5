@@ -8,7 +8,9 @@ defmodule Game.CardTest do
 
   property "cards/1 creates a list of cards for the provided list of heads" do
     forall heads <- list(integer(1, 104)) do
-      heads == Enum.map(Card.cards(heads), fn c -> c.head end)
+      heads == heads
+      |> Card.cards()
+      |> Enum.map(fn c -> c.head end)
     end
   end
 
@@ -27,22 +29,15 @@ defmodule Game.CardTest do
   end
 
   property "closest_lower_card/2 returns nil when there is no such card2" do
-    forall some_cards <- vector(5, card_gen()) do
-      {card, cards} = some_cards
-      |> Enum.sort
-      |> List.pop_at(0)
+    forall {[card | cards], _deck} <- cards_gen(5) do
       Card.closest_lower_card(card, cards) == nil
     end
   end
 
   property "closest_lower_card/2 finds the closest lower card." do
-    forall {index, five_cards} <- {integer(1, 4), vector(5, card_gen())} do
-      implies 5 == five_cards |> Enum.uniq |> Enum.count do
-        {card, cards} = five_cards
-        |> Enum.sort_by(fn c -> c.head end)
-        |> List.pop_at(index)
-        Card.closest_lower_card(card, cards) == Enum.at(cards, index - 1)
-      end
+    forall {index, {five_cards, _deck}} <- {integer(1, 4), cards_gen(5)} do
+      {card, cards} = List.pop_at(five_cards, index)
+      Card.closest_lower_card(card, cards) == Enum.at(cards, index - 1)
     end
   end
 

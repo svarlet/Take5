@@ -12,12 +12,12 @@ defmodule TestHelper do
 
   @spec cards_gen(0..104) :: {list(Card.t), list(Card.t)}
   def cards_gen(quantity) do
-    let deck <- exactly(Enum.to_list(deck())) do
+    let deck <- exactly(deck()) do
       {cards, rest_of_deck} = deck
       |> Enum.shuffle()
       |> Enum.split(quantity)
 
-    {Enum.sort_by(cards, fn c -> c.head end), MapSet.new(rest_of_deck)}
+    {Enum.sort_by(cards, fn c -> c.head end), rest_of_deck}
     end
   end
 

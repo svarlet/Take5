@@ -3,10 +3,10 @@ ExUnit.start()
 defmodule TestHelper do
   use PropCheck
 
-  import Game.Model, only: [deck: 0]
+  import Game.Deck, only: [deck: 0]
   import Game.Card, only: [card: 1]
 
-  alias Game.{Model, Player, Table}
+  alias Game.{Player, Table}
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
@@ -56,11 +56,7 @@ defmodule TestHelper do
   end
 
   def remaining_deck(hands) do
-    dealt_cards_set = hands
-    |> Enum.map(&MapSet.new/1)
-    |> Enum.reduce(&MapSet.union/2)
-
-    MapSet.difference(deck(), dealt_cards_set)
+    deck() -- Enum.flat_map(hands, &(&1))
   end
 
   def player_name_gen, do: elements(@names)
@@ -98,55 +94,6 @@ defmodule TestHelper do
 
   def player_gen(cards: [at_least: x]) when x in 0..10 do
     player_gen(cards: [at_least: x, at_most: 10])
-  end
-
-  @doc """
-  This generator generates and starts models of 2 to 10 players.
-  """
-  def model_gen do
-    let player_count <- integer(2, 10) do
-      @names
-      |> Enum.take(player_count)
-      |> Enum.reduce(%Model{}, fn name, model -> model |> Model.add_player(name) |> elem(1) end)
-      |> Model.start
-      |> elem(1)
-    end
-  end
-
-  defp select_first_card(%Player{hand: [card | _]} = player) do
-    player
-    |> Player.select(card)
-    |> elem(1)
-  end
-
-  @doc """
-  This helper selects a card on behalf of players of the provided model.
-
-  This function takes a model and a keyword which specifies how many
-  selections should occur: `players: :all` to select a card for every
-  player of the model, `players: :all_but_one` to select a card for
-  all but a random player of the model.
-
-  The selected card is the first card of the player's hand.
-  """
-  def select_cards(model, players: :all) do
-    all_players = model.players
-    |> Map.values
-    |> Enum.map(&select_first_card/1)
-    |> Enum.into(%{}, fn player -> {player.name, player} end)
-    %Model{model | players: all_players}
-  end
-
-  def select_cards(model, players: :all_but_one) do
-    [player | others] = Map.values(model.players)
-
-    all_players = others
-    |> Enum.map(&select_first_card/1)
-    |> List.insert_at(0, player)
-    |> Enum.shuffle
-    |> Enum.into(%{}, fn player -> {player.name, player} end)
-
-    %Model{model | players: all_players, status: :started}
   end
 
 end

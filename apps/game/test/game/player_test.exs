@@ -3,7 +3,7 @@ defmodule Game.PlayerTest do
   use PropCheck
 
   import TestHelper
-  import Game.Model, only: [deck: 0]
+  import Game.Deck, only: [deck: 0]
 
   alias Game.Player
 
@@ -38,7 +38,7 @@ defmodule Game.PlayerTest do
 
   property "has_card? returns false when the player's hand doesn't contain the specified card" do
     forall player <- player_gen() do
-      deck = MapSet.difference(deck(), MapSet.new(player.hand))
+      deck = deck() -- player.hand
       card_from_deck = Enum.random(deck)
       not Player.has_card?(player, card_from_deck)
     end

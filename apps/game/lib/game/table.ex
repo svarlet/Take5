@@ -70,14 +70,16 @@ defmodule Game.Table do
   @doc """
   Put a card on the table.
 
-  The card is placed in one of the rows, following the highest head among
-  those with a lower head.
+  The card is placed on top of the row with the closest lower head. When this is not
+  possible (all heads are higher) then it returns {:error, :choose_row} for the player
+  to choose any row to replace. Otherwise, it returns an ok tuple with the updated
+  table with the cards to collect.
   """
-  @spec put(t, Card.t) :: {:error, {:choose_row, Card.t}} | {:ok, {t, list(Card.t)}}
+  @spec put(t, Card.t) :: {:error, :choose_row} | {:ok, {t, list(Card.t)}}
   def put(table, card) do
     case row_for_card(table, card) do
       :no_matching_row ->
-        {:error, {:choose_row, card}}
+        {:error, :choose_row}
       row_id ->
         row = Map.get(table, row_id)
         if Enum.count(row) == 5 do

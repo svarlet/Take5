@@ -57,10 +57,11 @@ defmodule Game.TableTest do
     end
   end
 
-  property "returns {:error, {:choose_row, card}} when a card cannot be stacked on any row" do
+  property "returns {:error, :choose_row} when a card cannot be stacked on any row" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
-      table = %Table{row_0: [c2], row_1: [c3], row_2: [c4], row_3: [c5]}
-      {:error, {:choose_row, c1}} == Table.put(table, c1)
+      {:error, :choose_row} == %Table{}
+      |> Table.set(c2, c3, c4, c5)
+      |> Table.put(c1)
     end
   end
 

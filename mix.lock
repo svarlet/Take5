@@ -1,8 +1,9 @@
 %{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], []},
-  "credo": {:hex, :credo, "0.8.1", "137efcc99b4bc507c958ba9b5dff70149e971250813cbe7d4537ec7e36997402", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, optional: false]}]},
+  "credo": {:hex, :credo, "0.8.2", "aa410c8f27c5fab00cab24f8477782bde9100b73d31debdce46625f097cc0e32", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, optional: false]}]},
   "dialyze": {:hex, :dialyze, "0.2.1", "9fb71767f96649020d769db7cbd7290059daff23707d6e851e206b1fdfa92f9d", [:mix], []},
   "earmark": {:hex, :earmark, "1.2.2", "f718159d6b65068e8daeef709ccddae5f7fdc770707d82e7d126f584cd925b74", [:mix], []},
-  "ex_doc": {:hex, :ex_doc, "0.16.1", "b4b8a23602b4ce0e9a5a960a81260d1f7b29635b9652c67e95b0c2f7ccee5e81", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, optional: false]}]},
+  "ex_doc": {:hex, :ex_doc, "0.16.2", "3b3e210ebcd85a7c76b4e73f85c5640c011d2a0b2f06dcdf5acdb2ae904e5084", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, optional: false]}]},
+  "heap": {:hex, :heap, "1.0.1", "8ee982f8ac7275ff5d8fe72922d31a9c3458e128e219ff642c51fda007c323d3", [:mix], []},
   "propcheck": {:hex, :propcheck, "0.0.1", "e4f88852ee28a4d9b473cbc527504613289d377eb8fad67700008b5e51fb7711", [:mix], [{:proper, "~> 1.1.1-beta", [hex: :proper, optional: false]}]},
   "proper": {:hex, :proper, "1.1.1-beta", "5eef3fa0cae017ecb4bf6fd6a144349a048e999223a4f1e98ce372ff1772edd3", [:rebar3], []},
-  "quark": {:hex, :quark, "2.2.0", "56c231db44aea238e383472be3f909d4904a013c622631faafe97b001af146f1", [:mix], []}}
+  "quark": {:hex, :quark, "2.3.0", "3742ddc14441b4930c7067741879cb5b3e4881f391ea0aed7b138f20d16b30bb", [:mix], []}}

@@ -61,6 +61,12 @@ defmodule TestHelper do
 
   def player_name_gen, do: elements(@names)
 
+  def player_names_gen() do
+    let {names, count} <- {exactly(@names), integer(2, 10)} do
+      Enum.take(names, count)
+    end
+  end
+
   def hand_gen(min_size \\ 0, max_size \\ 10) do
     let size <- integer(min_size, max_size) do
       deck()

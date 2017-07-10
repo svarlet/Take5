@@ -47,7 +47,8 @@ defmodule Game.Mixfile do
      {:propcheck, "~> 0.0.1", only: :test},
      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
      {:quark, "~> 2.2"},
-     {:heap, "~> 1.0"}
+     {:heap, "~> 1.0"},
+     {:exceptional, "~> 2.1"}
     ]
   end
 end

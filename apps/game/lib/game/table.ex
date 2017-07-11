@@ -7,8 +7,7 @@ defmodule Game.Table do
 
   ## Examples
 
-      iex> %Game.Table{}
-      ...> |> Game.Table.set(Game.Card.card(1), Game.Card.card(2), Game.Card.card(3), Game.Card.card(4))
+      iex> Game.Table.new(Game.Card.card(1), Game.Card.card(2), Game.Card.card(3), Game.Card.card(4))
       ...> |> Game.Table.row_heads()
       ...> |> Enum.map(fn card -> card.head end)
       [1, 2, 3, 4]
@@ -22,6 +21,25 @@ defmodule Game.Table do
   @empty_row []
 
   defstruct row_0: @empty_row, row_1: @empty_row, row_2: @empty_row, row_3: @empty_row
+
+  @doc """
+  Creates a new table and put each provided card in a row.
+
+  ## Example
+
+      iex> c0 = Game.Card.card(1)
+      iex> c1 = Game.Card.card(2)
+      iex> c2 = Game.Card.card(3)
+      iex> c3 = Game.Card.card(4)
+      iex> Game.Table.new(c0, c1, c2, c3)
+      ...> |> Game.Table.row_heads
+      ...> |> Enum.map(fn c -> c.head end)
+      [1, 2, 3, 4]
+  """
+  @spec new(Card.t, Card.t, Card.t, Card.t) :: t
+  def new(c0, c1, c2, c3) do
+    %__MODULE__{row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]}
+  end
 
   @doc """
   Returns a list of the 4 rows of the provided table.
@@ -57,14 +75,6 @@ defmodule Game.Table do
     table
     |> row_heads()
     |> Enum.any?(predicate)
-  end
-
-  @doc """
-  Initialize a table with the 4 provided cards.
-  """
-  @spec set(t, Card.t, Card.t, Card.t, Card.t) :: t
-  def set(table, c0, c1, c2, c3) do
-    %__MODULE__{table | row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]}
   end
 
   @doc """

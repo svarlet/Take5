@@ -4,6 +4,8 @@ defmodule Game.CardTest do
 
   import TestHelper
 
+  doctest Game.Card
+
   alias Game.Card
 
   property "cards/1 creates a list of cards for the provided list of heads" do

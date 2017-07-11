@@ -10,12 +10,16 @@ defmodule TestHelper do
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
+  def no_duplicates?(enum) do
+    Enum.count(enum) == enum
+    |> Enum.uniq
+    |> Enum.count
+  end
+
   @spec cards_gen(0..104) :: {list(Card.t), list(Card.t)}
   def cards_gen(quantity) do
     let deck <- exactly(deck()) do
-      {cards, rest_of_deck} = deck
-      |> Enum.shuffle()
-      |> Enum.split(quantity)
+      {cards, rest_of_deck} = Enum.split(deck, quantity)
 
     {Enum.sort_by(cards, fn c -> c.head end), rest_of_deck}
     end
@@ -69,9 +73,7 @@ defmodule TestHelper do
 
   def hand_gen(min_size \\ 0, max_size \\ 10) do
     let size <- integer(min_size, max_size) do
-      deck()
-      |> Enum.shuffle
-      |> Enum.take(size)
+      Enum.take(deck(), size)
     end
   end
 

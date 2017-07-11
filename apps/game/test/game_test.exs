@@ -5,11 +5,6 @@ defmodule GameTest do
 
   import TestHelper
 
-  doctest Game.Deck
-  doctest Game.Card
-  doctest Game.Player
-  doctest Game.Table
-
   alias Game.{Table, Card}
   alias Game.{InvalidPlayerCountError, NonUniquePlayerNameError}
 
@@ -83,7 +78,20 @@ defmodule GameTest do
     end
   end
 
+  property "new/1 initializes the table with distinct cards from the deck", [:verbose] do
+    forall names <- player_names_gen() do
+      game = Game.new(names)
 
+      table_cards = game
+      ~> Game.table
+      ~> Table.row_heads
 
+      player_cards = game
+      ~> Game.players
+      ~> Enum.flat_map(fn p -> p.hand end)
+
+      no_duplicates?(table_cards ++ player_cards)
+    end
+  end
 
 end

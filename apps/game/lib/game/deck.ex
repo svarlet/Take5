@@ -3,7 +3,6 @@ defmodule Game.Deck do
 
   @deck for head <- 1..104, do: card(head)
 
-  def deck(), do: @deck
-
+  def deck(), do: Enum.shuffle(@deck)
 
 end

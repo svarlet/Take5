@@ -2,7 +2,7 @@ defmodule Game do
   use Exceptional
 
   alias Game.{Player, Deck, Table}
-  import Game.Card, only: [card: 1]
+  import Deck, only: [deck: 0]
 
   defstruct [:players, :table]
 
@@ -22,15 +22,17 @@ defmodule Game do
   end
 
   defp create(player_names) do
-    hands = Deck.deck()
-    |> Enum.shuffle()
-    |> Stream.chunk(10)
+    player_count = Enum.count(player_names)
+
+    {cards, [c0, c1, c2, c3 | _deck]} = Enum.split(deck(), player_count * 10)
+
+    hands = Enum.chunk(cards, 10)
 
     players = player_names
-    |> Stream.zip(hands)
+    |> Enum.zip(hands)
     |> Enum.map(fn {name, hand} -> Player.new(name, hand) end)
 
-    table = %Table{row_0: card(1), row_1: card(1), row_2: card(1), row_3: card(1)}
+    table = Table.new(c0, c1, c2, c3)
 
     %__MODULE__{players: players, table: table}
   end

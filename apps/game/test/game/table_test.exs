@@ -4,6 +4,8 @@ defmodule Game.TableTest do
 
   import TestHelper
 
+  doctest Game.Table
+
   alias Game.{Card, Table}
 
   test "has 4 empty rows" do
@@ -16,7 +18,7 @@ defmodule Game.TableTest do
 
   property "set table with 4 cards" do
     forall {[c0, c1, c2, c3], _deck} <- cards_gen(4) do
-      %Table{row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]} == Table.set(%Table{}, c0, c1, c2, c3)
+      %Table{row_0: [c0], row_1: [c1], row_2: [c2], row_3: [c3]} == Table.new(c0, c1, c2, c3)
     end
   end
 
@@ -59,15 +61,14 @@ defmodule Game.TableTest do
 
   property "returns {:error, :choose_row} when a card cannot be stacked on any row" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
-      {:error, :choose_row} == %Table{}
-      |> Table.set(c2, c3, c4, c5)
+      {:error, :choose_row} == Table.new(c2, c3, c4, c5)
       |> Table.put(c1)
     end
   end
 
   property "a card is put in only one row" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
-      with table <- Table.set(%Table{}, c1, c2, c3, c4),
+      with table <- Table.new(c1, c2, c3, c4),
            {:ok, {table, []}} <- Table.put(table, c5),
              row_heads <- Table.row_heads_by(table, fn c -> c == c5 end) do
         1 == Enum.count(row_heads)
@@ -79,8 +80,7 @@ defmodule Game.TableTest do
 
   property "a card is put in the row with the closest lower head" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
-      {:ok, {table, []}} = %Table{}
-      |> Table.set(c1, c2, c3, c4)
+      {:ok, {table, []}} = Table.new(c1, c2, c3, c4)
       |> Table.put(c5)
 
       [c5, c4] == table.row_3

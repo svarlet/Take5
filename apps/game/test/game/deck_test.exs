@@ -3,6 +3,8 @@ defmodule Game.DeckTest do
 
   alias Game.Deck
 
+  doctest Game.Deck
+
   test "a new deck has 104 cards" do
     assert 104 == Enum.count(Deck.deck())
   end
@@ -10,6 +12,7 @@ defmodule Game.DeckTest do
   test "a new deck has all heads from 1 to 104" do
     assert Enum.to_list(1..104) == Deck.deck()
     |> Enum.map(fn c -> c.head end)
+    |> Enum.sort
   end
 
 

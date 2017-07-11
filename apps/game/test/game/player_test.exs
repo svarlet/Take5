@@ -5,6 +5,8 @@ defmodule Game.PlayerTest do
   import TestHelper
   import Game.Deck, only: [deck: 0]
 
+  doctest Game.Player
+
   alias Game.Player
 
   test "a player requires a name to exist" do

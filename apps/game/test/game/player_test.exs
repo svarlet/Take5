@@ -15,6 +15,14 @@ defmodule Game.PlayerTest do
     end
   end
 
+  property "Creating a player with a nil list of cards is invalid" do
+    forall name <- binary(5) do
+      implies name != "" do
+        match? %Player.InvalidHandError{}, Player.new(name, nil)
+      end
+    end
+  end
+
   property "create a player with new/2" do
     forall {name, hand} <- {player_name_gen(), hand_gen(10)} do
       %Player{name: name, hand: hand} == Player.new(name, hand)

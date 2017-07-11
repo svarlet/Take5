@@ -8,11 +8,11 @@ defmodule Game.CardTest do
 
   alias Game.Card
 
-  property "cards/1 creates a list of cards for the provided list of heads" do
-    forall heads <- list(integer(1, 104)) do
-      heads == heads
+  property "cards/1 creates a list of cards for the provided list of ranks" do
+    forall ranks <- list(integer(1, 104)) do
+      ranks == ranks
       |> Card.cards()
-      |> Enum.map(fn c -> c.head end)
+      |> Enum.map(fn c -> c.rank end)
     end
   end
 

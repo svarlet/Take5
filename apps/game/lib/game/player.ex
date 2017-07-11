@@ -26,7 +26,7 @@ defmodule Game.Player do
       iex> hand = [card(1), card(2), card(20)]
       iex> {:ok, player} = "John" |> Player.new(hand) |> Player.select(card(2))
       iex> player.selected
-      %Game.Card{head: 2, penalty: 1}
+      %Game.Card{rank: 2, penalty: 1}
 
   """
 

@@ -41,7 +41,7 @@ defmodule Game.TableTest do
     forall {pivot_card, table} <- card_and_table_gen() do
       table
       |> Table.row_heads_by(Card.smaller_than(pivot_card))
-      |> Enum.all?(fn c -> c.head < pivot_card.head end)
+      |> Enum.all?(fn c -> c.rank < pivot_card.rank end)
     end
   end
 
@@ -78,7 +78,7 @@ defmodule Game.TableTest do
     end
   end
 
-  property "a card is put in the row with the closest lower head" do
+  property "a card is put in the row with the closest lower rank" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
       {:ok, {table, []}} = Table.new(c1, c2, c3, c4)
       |> Table.put(c5)

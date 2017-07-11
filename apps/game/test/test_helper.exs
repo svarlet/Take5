@@ -21,7 +21,7 @@ defmodule TestHelper do
     let deck <- exactly(deck()) do
       {cards, rest_of_deck} = Enum.split(deck, quantity)
 
-    {Enum.sort_by(cards, fn c -> c.head end), rest_of_deck}
+    {Enum.sort_by(cards, fn c -> c.rank end), rest_of_deck}
     end
   end
 
@@ -53,8 +53,8 @@ defmodule TestHelper do
 
   def pair_of_cards_gen() do
     let pivot <- integer(1, 103) do
-      let {lower_head, higher_head} <- {integer(1, pivot), integer(pivot + 1, 104)} do
-        {card(lower_head), card(higher_head)}
+      let {lower_rank, higher_rank} <- {integer(1, pivot), integer(pivot + 1, 104)} do
+        {card(lower_rank), card(higher_rank)}
       end
     end
   end

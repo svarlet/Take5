@@ -11,7 +11,7 @@ defmodule Game.DeckTest do
 
   test "a new deck has all heads from 1 to 104" do
     assert Enum.to_list(1..104) == Deck.deck()
-    |> Enum.map(fn c -> c.head end)
+    |> Enum.map(fn c -> c.rank end)
     |> Enum.sort
   end
 

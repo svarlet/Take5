@@ -9,7 +9,7 @@ defmodule Game.Table do
 
       iex> Game.Table.new(Game.Card.card(1), Game.Card.card(2), Game.Card.card(3), Game.Card.card(4))
       ...> |> Game.Table.row_heads()
-      ...> |> Enum.map(fn card -> card.head end)
+      ...> |> Enum.map(fn card -> card.rank end)
       [1, 2, 3, 4]
 
   """
@@ -33,7 +33,7 @@ defmodule Game.Table do
       iex> c3 = Game.Card.card(4)
       iex> Game.Table.new(c0, c1, c2, c3)
       ...> |> Game.Table.row_heads
-      ...> |> Enum.map(fn c -> c.head end)
+      ...> |> Enum.map(fn c -> c.rank end)
       [1, 2, 3, 4]
   """
   @spec new(Card.t, Card.t, Card.t, Card.t) :: t
@@ -80,8 +80,8 @@ defmodule Game.Table do
   @doc """
   Put a card on the table.
 
-  The card is placed on top of the row with the closest lower head. When this is not
-  possible (all heads are higher) then it returns {:error, :choose_row} for the player
+  The card is placed on top of the row with the closest lower rank. When this is not
+  possible (all ranks are higher) then it returns {:error, :choose_row} for the player
   to choose any row to replace. Otherwise, it returns an ok tuple with the updated
   table with the cards to collect.
   """

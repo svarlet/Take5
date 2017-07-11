@@ -26,10 +26,8 @@ defmodule Game.Player do
 
   @type t :: %__MODULE__{name: String.t, hand: list(Card.t), selected: Card.t}
 
-  @empty_hand []
-
   @enforce_keys [:name]
-  defstruct name: "", hand: @empty_hand, selected: :none
+  defstruct name: "", hand: [], selected: :none
 
   @doc """
   Creates a new player with the provided name and card.

@@ -9,6 +9,12 @@ defmodule Game.PlayerTest do
 
   alias Game.Player
 
+  property "Creating a player with an empty name is invalid", [:verbose] do
+    forall hand <- hand_gen() do
+      match? %Player.InvalidPlayerNameError{}, Player.new("", hand)
+    end
+  end
+
   property "create a player with new/2" do
     forall {name, hand} <- {player_name_gen(), hand_gen(10)} do
       %Player{name: name, hand: hand} == Player.new(name, hand)

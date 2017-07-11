@@ -21,25 +21,33 @@ defmodule Game.Player do
 
   """
 
-  alias Game.Card
+  use Exceptional
 
+  alias Game.Card
 
   @type t :: %__MODULE__{name: String.t, hand: list(Card.t), selected: Card.t}
 
   @enforce_keys [:name]
   defstruct name: "", hand: [], selected: :none
 
+  defmodule InvalidPlayerNameError do
+    defexception message: "Player name cannot be blank."
+  end
+
+  defmodule InvalidHandError do
+    defexception message: "nil is not a valid hand."
+  end
+
   @doc """
-  Creates a new player with the provided name and card.
+  Creates a new player with the provided name and cards.
 
   The name cannot be "" or nil and the cards must be a list of cards.
-
   See `Game.Card`.
   """
-  @spec new(String.t, list(Card.t)) :: t
-  def new(name, cards) when name != "" and name != nil and is_list(cards) do
-    %__MODULE__{name: name, hand: cards}
-  end
+  @spec new(String.t, list(Card.t)) :: t | Exception.t
+  def new("", _), do: %InvalidPlayerNameError{}
+  def new(_, nil), do: %InvalidHandError{}
+  def new(name, cards), do: %__MODULE__{name: name, hand: cards}
 
   @doc """
   Checks if the player possess the specified card.

@@ -9,26 +9,9 @@ defmodule Game.PlayerTest do
 
   alias Game.Player
 
-  test "a player requires a name to exist" do
-    assert_raise FunctionClauseError, fn -> Player.new("") end
-    assert_raise FunctionClauseError, fn -> Player.new(nil) end
-  end
-
-  property "create a player with new/1" do
-    forall name <- player_name_gen() do
-      %Player{name: name, hand: []} == Player.new(name)
-    end
-  end
-
   property "create a player with new/2" do
     forall {name, hand} <- {player_name_gen(), hand_gen(10)} do
       %Player{name: name, hand: hand} == Player.new(name, hand)
-    end
-  end
-
-  property "starts with an empty hand" do
-    forall name <- player_name_gen() do
-      [] == Player.new(name).hand
     end
   end
 

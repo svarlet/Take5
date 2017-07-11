@@ -32,8 +32,8 @@ defmodule Game.Card do
 
   ## Examples
 
-    iex> Game.Card.cards([1, 2 , 3])
-    [%Game.Card{rank: 1, penalty: 1}, %Game.Card{rank: 2, penalty: 1}, %Game.Card{rank: 3, penalty: 1}]
+      iex> Game.Card.cards([1, 2 , 3])
+      [%Game.Card{rank: 1, penalty: 1}, %Game.Card{rank: 2, penalty: 1}, %Game.Card{rank: 3, penalty: 1}]
 
   """
   @spec cards(list(1..104)) :: list(Card.t)

@@ -7,15 +7,6 @@ defmodule Game.Player do
   ## Examples
 
       iex> alias Game.Player
-      iex> Game.Player.new("Martin")
-      %Game.Player{name: "Martin"}
-
-      iex> alias Game.Player
-      iex> import Game.Card, only: [card: 1]
-      iex> Player.new("John") |> Player.has_card?(card(1))
-      false
-
-      iex> alias Game.Player
       iex> import Game.Card, only: [card: 1]
       iex> hand = [card(1), card(2), card(20)]
       iex> "Gerald" |> Player.new(hand) |> Player.has_card?(card(2))
@@ -39,17 +30,6 @@ defmodule Game.Player do
 
   @enforce_keys [:name]
   defstruct name: "", hand: @empty_hand, selected: :none
-
-  @doc """
-  Creates a new player with the provided name.
-
-  The player will be initialized with an empty hand and no selected card. The
-  name cannot be "" or nil.
-  """
-  @spec new(String.t) :: t
-  def new(name) when name != "" and name != nil do
-    %__MODULE__{name: name}
-  end
 
   @doc """
   Creates a new player with the provided name and card.

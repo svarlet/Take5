@@ -17,7 +17,7 @@ defmodule Game.Card do
   use Quark
 
   @type rank :: 1..104
-  @type penalty :: [1 | 2 | 3 | 5 | 7]
+  @type penalty :: 1 | 2 | 3 | 5 | 7
   @type t :: %__MODULE__{rank: rank, penalty: penalty}
 
   @enforce_keys [:rank, :penalty]

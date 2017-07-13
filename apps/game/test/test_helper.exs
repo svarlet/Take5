@@ -114,9 +114,6 @@ defmodule TestHelper do
     end
   end
 
-  @doc """
-  Given a game value, picks a random player and a random card from his hand.
-  """
   def game_player_card_gen() do
     let game <- game_gen() do
       let player <- elements(game |> Game.players() |> Map.values()) do

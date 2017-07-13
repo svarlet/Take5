@@ -6,7 +6,13 @@ defmodule GameTest do
   import TestHelper
 
   alias Game.{Table, Card}
-  alias Game.{InvalidPlayerCountError, NonUniquePlayerNameError}
+  alias Game.{
+    InvalidPlayerCountError,
+    NonUniquePlayerNameError,
+    NotPlayingError
+  }
+
+  import Card, only: [card: 1]
 
   #
   # TESTING PLAYERS REGISTRATION
@@ -22,10 +28,11 @@ defmodule GameTest do
 
   property "a game is initialized with 2 to 10 players", [:verbose] do
     forall names <- player_names_gen() do
-      names == names
+      Enum.sort(names) == names
       |> Game.new()
       ~> Game.players()
-      ~> Enum.map(fn p -> p.name end)
+      ~> Enum.map(fn {_name, p} -> p.name end)
+      ~> Enum.sort()
     end
   end
 
@@ -40,7 +47,7 @@ defmodule GameTest do
       names
       |> Game.new()
       ~> Game.players()
-      ~> Enum.all?(fn p -> Enum.count(p.hand) == 10 end)
+      ~> Enum.all?(fn {_name, p} -> Enum.count(p.hand) == 10 end)
     end
   end
 
@@ -49,7 +56,7 @@ defmodule GameTest do
       Enum.count(names) * 10 == names
       |> Game.new()
       ~> Game.players()
-      ~> Enum.flat_map(fn p -> p.hand end)
+      ~> Enum.flat_map(fn {_name, p} -> p.hand end)
       ~> Enum.uniq()
       ~> Enum.count()
     end
@@ -88,12 +95,20 @@ defmodule GameTest do
 
       player_cards = game
       ~> Game.players
-      ~> Enum.flat_map(fn p -> p.hand end)
+      ~> Enum.flat_map(fn {_name, p} -> p.hand end)
 
       no_duplicates?(table_cards ++ player_cards)
     end
   end
 
+  #
+  # PLAYING CARDS
+  #
 
+  property "play/3 returns an error when the player doesn't exist", [:verbose] do
+    forall game <- game_gen() do
+      match? %NotPlayingError{}, Game.play(game, "non_existing_player", card(1))
+    end
+  end
 
 end

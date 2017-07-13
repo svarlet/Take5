@@ -1,13 +1,16 @@
 defmodule Game.PlayerTest do
   use ExUnit.Case, async: true
   use PropCheck
+  use Exceptional
 
   import TestHelper
   import Game.Deck, only: [deck: 0]
+  import Game.Card, only: [card: 1]
 
   doctest Game.Player
 
   alias Game.Player
+  alias Game.Player.CardNotOwnedError
 
   property "Creating a player with an empty name is invalid", [:verbose] do
     forall hand <- hand_gen() do
@@ -49,19 +52,19 @@ defmodule Game.PlayerTest do
     end
   end
 
-  property "attempt to select a card not in hand returns an error" do
+  property "attempt to select a card not in hand returns an error", [:verbose] do
     forall player <- player_gen() do
-      a_card = [player.hand]
-      |> remaining_deck
-      |> Enum.random
-      {:error, :card_not_in_hand} == Player.select(player, a_card)
+      cards_not_owned = Enum.to_list(1..104) -- Enum.map(player.hand, fn c -> c.rank end)
+      forall rank <- elements(cards_not_owned) do
+        match? %CardNotOwnedError{}, Player.select(player, card(rank))
+      end
     end
   end
 
-  property "selecting a card from a player's hand references it in the selected field" do
+  property "selecting a card from a player's hand references it in the selected field", [:verbose] do
     forall player <- player_gen(cards: [at_least: 1]) do
       a_card = Enum.random(player.hand)
-      {:ok, %Player{selected: selection}} = Player.select(player, a_card)
+      %Player{selected: selection} = Player.select(player, a_card)
       a_card == selection
     end
   end
@@ -69,16 +72,18 @@ defmodule Game.PlayerTest do
   property "selecting a card from a player's hand removes it from his hand" do
     forall player <- player_gen(cards: [at_least: 1]) do
       a_card = Enum.random(player.hand)
-      {:ok, %Player{hand: hand}} = Player.select(player, a_card)
+      %Player{hand: hand} = Player.select(player, a_card)
       not Enum.member?(hand, a_card)
     end
   end
 
-  property "selecting a second card returns an error" do
+  property "changing the selected card places it back in hand" do
     forall player <- player_gen(cards: [at_least: 2]) do
-      [card1, card2 | _] = Enum.shuffle(player.hand)
-      {:ok, player} = Player.select(player, card1)
-      {:error, :already_picked_a_card} == Player.select(player, card2)
+      [card1, card2 | _] = player.hand
+      player
+      |> Player.select(card1)
+      ~> Player.select(card2)
+      ~> Player.has_card?(card1)
     end
   end
 

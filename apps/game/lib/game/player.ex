@@ -15,7 +15,7 @@ defmodule Game.Player do
       iex> alias Game.Player
       iex> import Game.Card, only: [card: 1]
       iex> hand = [card(1), card(2), card(20)]
-      iex> {:ok, player} = "John" |> Player.new(hand) |> Player.select(card(2))
+      iex> player = "John" |> Player.new(hand) |> Player.select(card(2))
       iex> player.selected
       %Game.Card{rank: 2, penalty: 1}
 
@@ -36,6 +36,10 @@ defmodule Game.Player do
 
   defmodule InvalidHandError do
     defexception message: "nil is not a valid hand."
+  end
+
+  defmodule CardNotOwnedError do
+    defexception message: "The player doesn't own this card."
   end
 
   @doc """
@@ -65,23 +69,29 @@ defmodule Game.Player do
   """
   @spec select(t, Card.t) :: {:ok, t} | {:error, :card_not_in_hand}
   def select(player, card) do
-    cond do
-      has_a_selection?(player) ->
-        {:error, :already_picked_a_card}
-      has_card?(player, card) ->
-        hand = List.delete(player.hand, card)
-        {:ok, %__MODULE__{player | hand: hand, selected: card}}
-      true ->
-        {:error, :card_not_in_hand}
+    player
+    |> validate_card(card)
+    ~> do_select(card)
+  end
+
+  defp validate_card(player, card) do
+    if has_card?(player, card) do
+      player
+    else
+      %CardNotOwnedError{}
     end
   end
 
-  defp has_a_selection?(%__MODULE__{selected: :none}), do: false
-  defp has_a_selection?(_), do: true
-
-  def no_selection?(player) do
-    not has_a_selection?(player)
+  defp do_select(%__MODULE__{selected: :none} = player, card) do
+    %__MODULE__{player | hand: List.delete(player.hand, card), selected: card}
   end
+
+  defp do_select(player, card) do
+    %__MODULE__{player | hand: [player.selected | player.hand], selected: card}
+  end
+
+  def no_selection?(%__MODULE__{selected: :none}), do: true
+  def no_selection?(_), do: false
 
   #
   # INSPECT PROTOCOL

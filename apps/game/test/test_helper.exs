@@ -104,4 +104,27 @@ defmodule TestHelper do
     player_gen(cards: [at_least: x, at_most: 10])
   end
 
+  #
+  # GAME GENERATORS
+  #
+
+  def game_gen() do
+    let names <- player_names_gen() do
+      Game.new(names)
+    end
+  end
+
+  @doc """
+  Given a game value, picks a random player and a random card from his hand.
+  """
+  def game_player_card_gen() do
+    let game <- game_gen() do
+      let player <- elements(game |> Game.players() |> Map.values()) do
+        let card <- elements(player.hand) do
+          {game, player.name, card}
+        end
+      end
+    end
+  end
+
 end

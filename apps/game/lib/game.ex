@@ -31,6 +31,7 @@ defmodule Game do
     players = player_names
     |> Enum.zip(hands)
     |> Enum.map(fn {name, hand} -> Player.new(name, hand) end)
+    |> Map.new(fn p -> {p.name, p} end)
 
     table = Table.new(c0, c1, c2, c3)
 
@@ -61,5 +62,27 @@ defmodule Game do
   def players(%__MODULE__{players: players}), do: players
 
   def table(%__MODULE__{table: table}), do: table
+
+  defmodule NotPlayingError do
+    defexception message: "The specified player is not participating in this game."
+  end
+
+  def play(game, player_name, card) do
+    game
+    |> validate_player_participation(player_name)
+    ~> do_play(player_name, card)
+  end
+
+  defp do_play(game, name, card) do
+    Player.select(game[name], card)
+  end
+
+  defp validate_player_participation(game, name) do
+    if Map.has_key?(game.players, name) do
+      game
+    else
+      %NotPlayingError{}
+    end
+  end
 
 end

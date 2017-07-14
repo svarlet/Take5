@@ -111,4 +111,46 @@ defmodule GameTest do
     end
   end
 
+  property "the table doesn't change if any player hasn't selected a card yet" do
+    forall game <- game_gen() do
+      all_players = game
+      |> Game.players
+      |> Map.values
+      forall some_players <- subset(all_players)  do
+        updated_game = some_players
+        |> Enum.map(fn p -> {p.name, Enum.random(p.hand)} end)
+        |> Enum.reduce(game, fn {name, card}, game -> Game.play(game, name, card) end)
+
+        Map.equal?(game.table, updated_game.table)
+      end
+    end
+  end
+
+  property "all cards are added to the table once all players have selected a card", [:verbose] do
+    forall game <- game_gen() do
+      player_selections = game
+      |> Game.players
+      |> Map.values
+      |> Enum.map(fn p -> {p.name, Enum.random(p.hand)} end)
+
+      reducer = fn {name, card}, game -> Game.play(game, name, card) end
+      updated_game = Enum.reduce(player_selections, game, reducer)
+
+      table_cards = updated_game
+      |> Game.table
+      |> Table.rows
+      |> Enum.flat_map(fn cards -> cards end)
+
+      selected_cards = Enum.map(player_selections, fn {_, c} -> c end)
+
+      Enum.all?(selected_cards, fn c -> c in table_cards end)
+
+
+      This is not true. If a row contains the card 1, 2, 3, and 4, and if 2
+      players play the card 5 and 6, the card 5 will be collected by the
+      player who played the card 6.
+
+    end
+  end
+
 end

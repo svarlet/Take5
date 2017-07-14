@@ -10,11 +10,31 @@ defmodule TestHelper do
 
   @names ~w{Hugo Seb Geraldo Fausto Joao Julie Arthur Daniel Ziad Emily}
 
+  #
+  # ENUM HELPERS
+  #
+
   def no_duplicates?(enum) do
     Enum.count(enum) == enum
     |> Enum.uniq
     |> Enum.count
   end
+
+  #
+  # GENERIC GENERATORS
+  #
+
+  def subset(enumerable) do
+    let enum <- exactly(enumerable) do
+      let count <- integer(0, Enum.count(enumerable)) do
+        Enum.take(enum, count)
+      end
+    end
+  end
+
+  #
+  # CARDS GENERATORS
+  #
 
   @spec cards_gen(0..104) :: {list(Card.t), list(Card.t)}
   def cards_gen(quantity) do
@@ -62,6 +82,10 @@ defmodule TestHelper do
   def remaining_deck(hands) do
     deck() -- Enum.flat_map(hands, &(&1))
   end
+
+  #
+  # PLAYER GENERATOR
+  #
 
   def player_name_gen, do: elements(@names)
 

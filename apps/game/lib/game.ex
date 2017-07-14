@@ -74,7 +74,11 @@ defmodule Game do
   end
 
   defp do_play(game, name, card) do
-    Player.select(game[name], card)
+    players = game
+    |> Game.players
+    |> Map.update!(name, fn p -> Player.select(p, card) end)
+
+    %__MODULE__{game | players: players}
   end
 
   defp validate_player_participation(game, name) do
@@ -83,6 +87,50 @@ defmodule Game do
     else
       %NotPlayingError{}
     end
+  end
+
+  #
+  # INSPECT PROTOCOL IMPLEMENTATION
+  #
+
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    def inspect(game, _) do
+      "Game"
+      |> line(inspect_players(game))
+      |> line(inspect_table(game))
+      |> group
+      |> nest(2)
+    end
+
+    defp inspect_players(game) do
+      players_doc =
+        if Enum.empty?(Game.players(game)) do
+          "none"
+        else
+          game
+          |> Game.players
+          |> Map.values
+          |> Enum.map(&Kernel.inspect/1)
+          |> fold_doc(&line/2)
+        end
+
+      "Players"
+      |> line(players_doc)
+      |> nest(2)
+    end
+
+    defp inspect_table(game) do
+      table_doc = game
+      |> Game.table
+      |> Kernel.inspect
+
+      "Table"
+      |> line(table_doc)
+      |> nest(2)
+    end
+
   end
 
 end

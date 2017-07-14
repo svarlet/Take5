@@ -59,7 +59,9 @@ defmodule Game do
     end
   end
 
-  def players(%__MODULE__{players: players}), do: players
+  def player_names(%__MODULE__{players: players}), do: Map.keys(players)
+
+  def players(%__MODULE__{players: players}), do: Map.values(players)
 
   def table(%__MODULE__{table: table}), do: table
 
@@ -74,10 +76,18 @@ defmodule Game do
   end
 
   defp do_play(game, name, card) do
-    players = game
-    |> Game.players
-    |> Map.update!(name, fn p -> Player.select(p, card) end)
-
+    players = Map.update!(game.players, name, fn p -> Player.select(p, card) end)
+    if Enum.any?(players, &Player.no_selection?/1) do
+      # %__MODULE__{game | players: players}
+    else
+      # todo:
+      # - flush all selected cards from players
+      # - put all cards in the right order on the table, for now select row_0 when user should make a choice
+      # - update each player with his gathered cards
+      # - eventually remove the last line of this function :P
+      # - refactoring opportunity: few methods of the Table module can be replaced by a single one:
+      #   def cards(table, predicate) where predicate is a (card, index -> boolean) end
+    end
     %__MODULE__{game | players: players}
   end
 
@@ -111,7 +121,6 @@ defmodule Game do
         else
           game
           |> Game.players
-          |> Map.values
           |> Enum.map(&Kernel.inspect/1)
           |> fold_doc(&line/2)
         end

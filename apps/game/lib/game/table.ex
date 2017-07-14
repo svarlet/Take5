@@ -117,6 +117,12 @@ defmodule Game.Table do
     end
   end
 
+  def all_cards(table) do
+    table
+    |> Map.take([:row_0, :row_1, :row_2, :row_3])
+    |> Enum.flat_map(fn {_row_id, cards} -> cards end)
+  end
+
   #
   # INSPECT PROTOCOL IMPLEMENTATION
   #

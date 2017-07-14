@@ -25,10 +25,10 @@ defmodule Game.Player do
 
   alias Game.Card
 
-  @type t :: %__MODULE__{name: String.t, hand: list(Card.t), selected: Card.t}
+  @type t :: %__MODULE__{name: String.t, hand: list(Card.t), selected: Card.t, gathered_cards: list(Card.t)}
 
   @enforce_keys [:name]
-  defstruct name: "", hand: [], selected: :none
+  defstruct name: "", hand: [], selected: :none, gathered_cards: []
 
   defmodule InvalidPlayerNameError do
     defexception message: "Player name cannot be blank."

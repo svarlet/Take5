@@ -109,4 +109,13 @@ defmodule Game.TableTest do
     end
   end
 
+  property "all_cards/1 returns all the cards of the table", [:verbose] do
+    forall {table, _deck} <- table_gen() do
+      cards = table.row_0 ++ table.row_1 ++ table.row_2 ++ table.row_3
+      Enum.sort(cards) == table
+      |> Table.all_cards
+      |> Enum.sort
+    end
+  end
+
 end

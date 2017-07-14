@@ -12,7 +12,7 @@ defmodule Game.PlayerTest do
   alias Game.Player
   alias Game.Player.CardNotOwnedError
 
-  property "Creating a player with an empty name is invalid", [:verbose] do
+  property "Creating a player with an empty name is invalid" do
     forall hand <- hand_gen() do
       match? %Player.InvalidPlayerNameError{}, Player.new("", hand)
     end
@@ -52,7 +52,7 @@ defmodule Game.PlayerTest do
     end
   end
 
-  property "attempt to select a card not in hand returns an error", [:verbose] do
+  property "attempt to select a card not in hand returns an error" do
     forall player <- player_gen() do
       cards_not_owned = Enum.to_list(1..104) -- Enum.map(player.hand, fn c -> c.rank end)
       forall rank <- elements(cards_not_owned) do
@@ -61,7 +61,7 @@ defmodule Game.PlayerTest do
     end
   end
 
-  property "selecting a card from a player's hand references it in the selected field", [:verbose] do
+  property "selecting a card from a player's hand references it in the selected field" do
     forall player <- player_gen(cards: [at_least: 1]) do
       a_card = Enum.random(player.hand)
       %Player{selected: selection} = Player.select(player, a_card)
@@ -99,6 +99,12 @@ defmodule Game.PlayerTest do
       false == player
       |> Player.select(a_card)
       |> Player.no_selection?
+    end
+  end
+
+  property "a player is initialized with an empty list of gathered cards" do
+    forall player <- player_gen() do
+      player.gathered_cards == []
     end
   end
 

@@ -1,4 +1,6 @@
 defmodule Game.Table do
+  use Exceptional
+
   @moduledoc """
   This module represents a table.
 
@@ -21,6 +23,10 @@ defmodule Game.Table do
   @empty_row []
 
   defstruct row_0: @empty_row, row_1: @empty_row, row_2: @empty_row, row_3: @empty_row
+
+  defmodule SelectRowError do
+    defexception message: "A row must be selected to put this card on the table."
+  end
 
   @doc """
   Creates a new table and put each provided card in a row.
@@ -85,17 +91,17 @@ defmodule Game.Table do
   to choose any row to replace. Otherwise, it returns an ok tuple with the updated
   table with the cards to collect.
   """
-  @spec put(t, Card.t) :: {:error, :choose_row} | {:ok, {t, list(Card.t)}}
+  @spec put(t, Card.t) :: %SelectRowError{} | {t, list(Card.t)}
   def put(table, card) do
     case row_for_card(table, card) do
       :no_matching_row ->
-        {:error, :choose_row}
+        %SelectRowError{}
       row_id ->
         row = Map.get(table, row_id)
         if Enum.count(row) == 5 do
-          {:ok, {Map.update(table, row_id, @empty_row, fn _ -> [card] end), row}}
+          {Map.update(table, row_id, @empty_row, fn _ -> [card] end), row}
         else
-          {:ok, {Map.update(table, row_id, @empty_row, fn row -> [card | row] end), []}}
+          {Map.update(table, row_id, @empty_row, fn row -> [card | row] end), []}
         end
     end
   end

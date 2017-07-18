@@ -7,6 +7,7 @@ defmodule Game.TableTest do
   doctest Game.Table
 
   alias Game.{Card, Table}
+  alias Game.Table.SelectRowError
 
   test "has 4 empty rows" do
     table = %Table{}
@@ -59,17 +60,16 @@ defmodule Game.TableTest do
     end
   end
 
-  property "returns {:error, :choose_row} when a card cannot be stacked on any row" do
+  property "returns %SelectRowError{} when a card cannot be stacked on any row" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
-      {:error, :choose_row} == Table.new(c2, c3, c4, c5)
-      |> Table.put(c1)
+      match? %SelectRowError{}, Table.put(Table.new(c2, c3, c4, c5), c1)
     end
   end
 
   property "a card is put in only one row" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
       with table <- Table.new(c1, c2, c3, c4),
-           {:ok, {table, []}} <- Table.put(table, c5),
+           {table, []} <- Table.put(table, c5),
              row_heads <- Table.row_heads_by(table, fn c -> c == c5 end) do
         1 == Enum.count(row_heads)
       else
@@ -80,7 +80,7 @@ defmodule Game.TableTest do
 
   property "a card is put in the row with the closest lower rank" do
     forall {[c1, c2, c3, c4, c5], _deck} <- cards_gen(5) do
-      {:ok, {table, []}} = Table.new(c1, c2, c3, c4)
+      {table, []} = Table.new(c1, c2, c3, c4)
       |> Table.put(c5)
 
       [c5, c4] == table.row_3
@@ -91,7 +91,7 @@ defmodule Game.TableTest do
     forall {cards, _deck} <- cards_gen(9) do
       {full_row, [card_to_play, c1, c2, c3]} = Enum.split(cards, 5)
 
-      {:ok, {table, _}} = %Table{row_0: full_row, row_1: [c1], row_2: [c2], row_3: [c3]}
+      {table, _} = %Table{row_0: full_row, row_1: [c1], row_2: [c2], row_3: [c3]}
       |> Table.put(card_to_play)
 
       [card_to_play] == table.row_0
@@ -102,7 +102,7 @@ defmodule Game.TableTest do
     forall {cards, _deck} <- cards_gen(9) do
       {full_row, [card_to_play, c1, c2, c3]} = Enum.split(cards, 5)
 
-      {:ok, {_table, gathered_cards}} = %Table{row_0: full_row, row_1: [c1], row_2: [c2], row_3: [c3]}
+      {_table, gathered_cards} = %Table{row_0: full_row, row_1: [c1], row_2: [c2], row_3: [c3]}
       |> Table.put(card_to_play)
 
       gathered_cards == full_row

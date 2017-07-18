@@ -125,9 +125,14 @@ defmodule GameTest do
 
   property "when every player has a selected card then old_table + selected_cards == new_table + gathered_cards" do
     forall game <- game_gen() do
+      game = game
+      |> Game.players
+      |> Enum.map(fn p -> Player.select(p, Enum.random(p.hand)) end)
+      |> Map.put(game, :players)
+
       player_selections = game
       |> Game.players
-      |> Enum.map(fn p -> {p.name, Enum.random(p.hand)} end)
+      |> Enum.map(fn p -> {p.name, p.selected} end)
 
       table_cards = game
       |> Game.table

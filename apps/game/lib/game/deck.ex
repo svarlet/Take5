@@ -5,4 +5,8 @@ defmodule Game.Deck do
 
   def deck(), do: Enum.shuffle(@deck)
 
+  def deal(deck, n) do
+    Enum.split(deck, n)
+  end
+
 end

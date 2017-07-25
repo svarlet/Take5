@@ -1,145 +1,69 @@
 defmodule Game do
-  use Exceptional
+  alias Game.{Player, Deck, Table, NotParticipatingError}
 
-  alias Game.{Player, Deck, Table}
-  import Deck, only: [deck: 0]
-
-  defstruct [:players, :table]
-
-  defmodule InvalidPlayerCountError do
-    defexception message: "Invalid player count, must be between 2 and 10."
-  end
-
-  defmodule NonUniquePlayerNameError do
-    defexception message: "All players must have a unique name."
-  end
-
-  def new(player_names) do
-    player_names
-    |> validate_players_count
-    ~> validate_unique_names
-    ~> create()
-  end
-
-  defp create(player_names) do
-    player_count = Enum.count(player_names)
-
-    {cards, [c0, c1, c2, c3 | _deck]} = Enum.split(deck(), player_count * 10)
-
-    hands = Enum.chunk(cards, 10)
-
-    players = player_names
-    |> Enum.zip(hands)
-    |> Enum.map(fn {name, hand} -> Player.new(name, hand) end)
-    |> Map.new(fn p -> {p.name, p} end)
-
-    table = Table.new(c0, c1, c2, c3)
-
-    %__MODULE__{players: players, table: table}
-  end
-
-  defp validate_players_count(player_names) do
-    player_count = Enum.count(player_names)
-    if 2 <= player_count && player_count <= 10 do
-      player_names
-    else
-      %InvalidPlayerCountError{}
-    end
-  end
-
-  defp validate_unique_names(names) do
-    unique_names_count = names
-    |> Enum.uniq()
-    |> Enum.count()
-
-    if unique_names_count == Enum.count(names) do
-      names
-    else
-      %NonUniquePlayerNameError{}
-    end
-  end
-
-  def player_names(%__MODULE__{players: players}), do: Map.keys(players)
-
-  def players(%__MODULE__{players: players}), do: Map.values(players)
-
-  def table(%__MODULE__{table: table}), do: table
-
-  defmodule NotPlayingError do
-    defexception message: "The specified player is not participating in this game."
-  end
-
-  def play(game, player_name, card) do
-    game
-    |> validate_player_participation(player_name)
-    ~> do_play(player_name, card)
-  end
-
-  defp do_play(game, name, card) do
-    players = Map.update!(game.players, name, fn p -> Player.select(p, card) end)
-    if Enum.any?(players, &Player.no_selection?/1) do
-      # %__MODULE__{game | players: players}
-    else
-      # todo:
-      # - flush all selected cards from players
-      # - put all cards in the right order on the table, for now select row_0 when user should make a choice
-      # - update each player with his gathered cards
-      # - eventually remove the last line of this function :P
-      # - refactoring opportunity: few methods of the Table module can be replaced by a single one:
-      #   def cards(table, predicate) where predicate is a (card, index -> boolean) end
-    end
-    %__MODULE__{game | players: players}
-  end
-
-  defp validate_player_participation(game, name) do
-    if Map.has_key?(game.players, name) do
-      game
-    else
-      %NotPlayingError{}
-    end
-  end
+  defstruct state: Game.InitializingState,
+    players: %{},
+    deck: nil,
+    table: nil,
+    chosen_row: nil,
+    waiting_for: nil
 
   #
-  # INSPECT PROTOCOL IMPLEMENTATION
+  # API
   #
 
-  defimpl Inspect do
-    import Inspect.Algebra
-
-    def inspect(game, _) do
-      "Game"
-      |> line(inspect_players(game))
-      |> line(inspect_table(game))
-      |> group
-      |> nest(2)
-    end
-
-    defp inspect_players(game) do
-      players_doc =
-        if Enum.empty?(Game.players(game)) do
-          "none"
-        else
-          game
-          |> Game.players
-          |> Enum.map(&Kernel.inspect/1)
-          |> fold_doc(&line/2)
-        end
-
-      "Players"
-      |> line(players_doc)
-      |> nest(2)
-    end
-
-    defp inspect_table(game) do
-      table_doc = game
-      |> Game.table
-      |> Kernel.inspect
-
-      "Table"
-      |> line(table_doc)
-      |> nest(2)
-    end
-
+  def new() do
+    {cards, deck} = Deck.deal(Deck.new, 4)
+    %__MODULE__{deck: deck, table: Table.new(cards)}
   end
+
+  def join(game, name), do: game.state.join(game, name)
+
+  def start(game), do: game.state.start(game)
+
+  def select(game, name, card), do: game.state.select(game, name, card)
+
+  def participating?(game, name), do: Map.has_key?(game.players, name)
+
+  def play_round(game), do: game.state.play_round(game)
+
+  def choose_row(game, name, row_id), do: game.state.choose_row(game, name, row_id)
+
+  #
+  # HELPERS
+  #
+
+  def get_table(%__MODULE__{table: table}), do: table
+
+  def set_table(game, table), do: %__MODULE__{game | table: table}
+
+  def missing_selection?(game) do
+    Enum.any?(game.players, fn {_name, p} -> not Player.has_selection?(p) end)
+  end
+
+  def selections(game) do
+    game.players
+    |> Enum.filter(fn {_name, %Player{selection: card}} -> card != nil end)
+    |> Enum.map(fn {name, %Player{selection: card}} -> {name, card} end)
+    |> Enum.sort_by(fn {_name, card} -> card end)
+  end
+
+  def dispatch_gathered_cards(game, name, cards) do
+    update_in(game.players[name], &Player.gather_cards(&1, cards))
+  end
+
+  def get_score(game, name) do
+    if participating?(game, name) do
+      Player.get_score(game.players[name])
+    else
+      %NotParticipatingError{}
+    end
+  end
+
+  def set_chosen_row_id(game, rid), do: %__MODULE__{game | chosen_row: rid}
+
+  def set_state(game, state), do: %__MODULE__{game | state: state}
+
+  def set_waiting_for(game, name), do: %__MODULE__{game | waiting_for: name}
 
 end

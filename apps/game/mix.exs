@@ -46,8 +46,6 @@ defmodule Game.Mixfile do
      {:credo, "~> 0.8", only: :dev, runtime: false},
      {:propcheck, "~> 0.0.1", only: :test},
      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-     {:quark, "~> 2.2"},
-     {:heap, "~> 1.0"},
      {:exceptional, "~> 2.1"}
     ]
   end

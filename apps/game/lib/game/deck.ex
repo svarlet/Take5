@@ -1,12 +1,9 @@
 defmodule Game.Deck do
-  import Game.Card, only: [card: 1]
+  @moduledoc false
 
-  @deck for rank <- 1..104, do: card(rank)
+  @deck 1..104
 
-  def deck(), do: Enum.shuffle(@deck)
+  def new, do: Enum.shuffle(@deck)
 
-  def deal(deck, n) do
-    Enum.split(deck, n)
-  end
-
+  def deal(deck, n), do: Enum.split(deck, n)
 end

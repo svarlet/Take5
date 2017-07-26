@@ -41,3 +41,7 @@ end
 defmodule Game.UnexpectedRowSelectionError do
   defexception message: "No player is expected to select a row."
 end
+
+defmodule Game.GameOverError do
+  defexception message: "The game is already over."
+end

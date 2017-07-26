@@ -6,6 +6,7 @@ defmodule Game.PlayingState do
   alias Game.{
     Player,
     Table,
+    GameOverState,
     AlreadyStartedError,
     NotParticipatingError,
     InvalidSelectionError,
@@ -40,7 +41,12 @@ defmodule Game.PlayingState do
     if Game.missing_selection?(game) do
       %MissingSelectionError{}
     else
-      do_play_round(game)
+      game = do_play_round(game)
+      if Game.game_over?(game) do
+        Game.set_state(game, GameOverState)
+      else
+        game
+      end
     end
   end
 

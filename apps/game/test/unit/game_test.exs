@@ -4,6 +4,7 @@ defmodule GameTest do
 
   alias Game.{
     Table,
+    Player,
     DuplicateNameError,
     GameCapacityError,
     NotEnoughPlayersError,
@@ -12,7 +13,8 @@ defmodule GameTest do
     NotParticipatingError,
     InvalidSelectionError,
     MissingSelectionError,
-    RowSelectionError
+    RowSelectionError,
+    GameOverError
   }
 
   #
@@ -314,6 +316,26 @@ defmodule GameTest do
       {_hand, game} = Game.new
       |> Game.join("p1")
       assert 0 == Game.get_score(game, "p1")
+    end
+  end
+
+
+
+  describe "Finishing the game:" do
+    test "when the last round is played then any further action is an error" do
+      finished_game = %Game{state: Game.PlayingState,
+                            table: Table.new([10, 20, 30, 40]),
+                            players: %{
+                              "p1" => Player.new([25]),
+                              "p2" => Player.new([32])}}
+      |> Game.select("p1", 25)
+      |> Game.select("p2", 32)
+      |> Game.play_round
+      assert Game.join(finished_game, "p3") == %GameOverError{}
+      assert Game.start(finished_game) == %GameOverError{}
+      assert Game.select(finished_game, "p1", 5) == %GameOverError{}
+      assert Game.play_round(finished_game) == %GameOverError{}
+      assert Game.choose_row(finished_game, "p1", :r3) == %GameOverError{}
     end
   end
 end

@@ -66,4 +66,11 @@ defmodule Game do
 
   def set_waiting_for(game, name), do: %__MODULE__{game | waiting_for: name}
 
+  def game_over?(%__MODULE__{players: ps}) do
+    ps
+    |> Enum.all?(fn {_name, player} ->
+      Player.empty_hand?(player) && not Player.has_selection?(player)
+    end)
+  end
+
 end

@@ -13,6 +13,8 @@ defmodule Game.Player do
 
   def get_score(player), do: player.score
 
+  def empty_hand?(player), do: player.hand == []
+
   def gather_cards(player, []) do
     %__MODULE__{player | selection: nil}
   end

@@ -5,11 +5,6 @@ defmodule FsmTest do
 
   require Logger
 
-  alias Game.{
-    DuplicateNameError,
-    GameCapacityError
-  }
-
   property "Simulate many games", [:verbose] do
     forall cmds <- commands(__MODULE__) do
       {history, state, result} = run_commands(__MODULE__, cmds)
@@ -48,7 +43,7 @@ defmodule FsmTest do
   # SIMULATION
   #
 
-  defstruct [:sut, :players]
+  defstruct [:sut, :players, :state]
 
   def initial_state() do
     %__MODULE__{sut: Game.new, players: %{}}
@@ -56,16 +51,18 @@ defmodule FsmTest do
 
   def command(%__MODULE__{sut: game}) do
     frequency([
-      {10, {:call, Game, :join, [game, name_gen()]}},
+      {4, {:call, Game, :join, [game, name_gen()]}},
       {1, {:call, Game, :start, [game]}}
     ])
   end
 
-  def precondition(_, {:call, _, :join, _}) do
-    true
+  def precondition(state, {:call, _, :join, [_, name]}) do
+    state.state != :started
+    && not Map.has_key?(state.players, name)
+    && map_size(state.players) < 10
   end
 
-  def precondition(state, {:call, Game, :start, _}) do
+  def precondition(_state, {:call, Game, :start, _}) do
     true
   end
 
@@ -74,16 +71,9 @@ defmodule FsmTest do
     true
   end
 
-  def postcondition(state, {:call, _, :join, [_, name]}, result) do
-    cond do
-      map_size(state.players) == 10 ->
-        result == %GameCapacityError{}
-      Map.has_key?(state.players, name) ->
-        result == %DuplicateNameError{} or Logger.warn("something fishy here")
-      true ->
-        {hand, game} = result
-        length(hand) == 10 && (map_size(game.players) - map_size(state.players) == 1)
-    end
+  def postcondition(state, {:call, _, :join, _}, result) do
+    {hand, game} = result
+    length(hand) == 10 && (map_size(game.players) - map_size(state.players) == 1)
   end
 
   def postcondition(_state, {:call, _, :start, _}, _) do
@@ -97,6 +87,8 @@ defmodule FsmTest do
 
   def next_state(state, result, {:call, _, :join, [_, name]}) do
     cond do
+      state.state == :started ->
+        state
       map_size(state.players) == 10 ->
         state
       Map.has_key?(state.players, name) ->
@@ -109,11 +101,10 @@ defmodule FsmTest do
   end
 
   def next_state(state, result, {:call, _, :start, _}) do
-    cond do
-      map_size(state.players) >= 2 ->
-        %__MODULE__{state | sut: result}
-      true ->
-        state
+    if map_size(state.players) >= 2 do
+      %__MODULE__{state | sut: result, state: :started}
+    else
+      state
     end
   end
 

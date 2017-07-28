@@ -1,5 +1,5 @@
 defmodule FsmTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   use PropCheck
   use PropCheck.StateM
 
@@ -7,21 +7,21 @@ defmodule FsmTest do
 
   property "Simulate many games", [:verbose] do
     forall cmds <- commands(__MODULE__) do
-      {history, state, result} = run_commands(__MODULE__, cmds)
-      (:ok == result)
-      |> when_fail(IO.puts """
-      ========== REPORT ==========
-      History:
-      #{inspect history, pretty: true}
-
-      State:
-      #{inspect state, pretty: true}
-
-      Result:
-      #{inspect result, pretty: true}
-      ============================
-      """)
-      |> aggregate(command_names(cmds))
+      trap_exit do
+        {history, state, result} = run_commands(__MODULE__, cmds)
+        (:ok == result)
+        |> when_fail(:io.format(
+          """
+          =======~n
+          Failing command: ~p~n
+          At state: ~p~n
+          =======~n
+          Result: ~p~n
+          History: ~p~n
+          """,
+          [Enum.at(cmds, length(history) - 1), state, result, history]))
+        |> aggregate(command_names(cmds))
+      end
     end
   end
 
@@ -36,19 +36,37 @@ defmodule FsmTest do
   end
 
   #
+  # HELPERS
+  #
+
+  def select_command(state) do
+    let name <- elements(Map.keys(state.players)) do
+      hand = Map.fetch!(state.players, name)
+      card = {:call, List, :first, [hand]}
+      {:call, Game, :select, [state.sut, name, card]}
+    end
+  end
+
+  #
   # SIMULATION
   #
 
-  defstruct [:sut, :players, :state]
+  defstruct [:sut, :players, :state, :selections]
 
   def initial_state() do
-    %__MODULE__{sut: Game.new, players: %{}}
+    %__MODULE__{sut: Game.new, players: %{}, state: :init, selections: %{}}
   end
 
-  def command(%__MODULE__{sut: game}) do
+  def command(%__MODULE__{sut: game, state: :init}) do
     frequency([
       {4, {:call, Game, :join, [game, name_gen()]}},
       {1, {:call, Game, :start, [game]}}
+    ])
+  end
+
+  def command(%__MODULE__{state: :started} = state) do
+    frequency([
+      {6, select_command(state)}
     ])
   end
 
@@ -62,6 +80,10 @@ defmodule FsmTest do
     true
   end
 
+  def precondition(state, {:call, _, :select, _}) do
+    state.state == :started
+  end
+
   def precondition(_, {:call, module, fun, _}) do
     Logger.warn("No postcondition callback found for #{inspect module}.#{inspect fun}.")
     true
@@ -73,6 +95,10 @@ defmodule FsmTest do
   end
 
   def postcondition(_state, {:call, _, :start, _}, _) do
+    true
+  end
+
+  def postcondition(_state, {:call, _, :select, _}, _) do
     true
   end
 
@@ -92,7 +118,8 @@ defmodule FsmTest do
       true ->
         %__MODULE__{state |
                     sut: {:call, Kernel, :elem, [result, 1]},
-                    players: Map.put(state.players, name, {:call, Kernel, :elem, [result, 0]})}
+                    players: Map.put(state.players, name, {:call, Kernel, :elem, [result, 0]}),
+                    selections: Map.put(state.selections, name, nil)}
     end
   end
 
@@ -101,6 +128,20 @@ defmodule FsmTest do
       %__MODULE__{state | sut: result, state: :started}
     else
       state
+    end
+  end
+
+  def next_state(state, result, {:call, _, :select, [_, name, card]}) do
+    if state.selections[name] == nil do
+      %__MODULE__{state |
+                  sut: result,
+                  selections: %{state.selections | name => card},
+                  players: Map.update!(state.players, name, fn hand -> {:call, Enum, :drop, [hand, 1]} end)}
+    else
+      %__MODULE__{state |
+                  sut: result,
+                  selections: %{state.selections | name => card},
+                  players: Map.update!(state.players, name, fn hand -> {:call, List, :insert_at, [hand, -1, state.selections[name]]} end)}
     end
   end
 

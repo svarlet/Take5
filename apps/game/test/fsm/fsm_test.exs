@@ -36,10 +36,6 @@ defmodule FsmTest do
   end
 
   #
-  # HELPERS
-  #
-
-  #
   # SIMULATION
   #
 

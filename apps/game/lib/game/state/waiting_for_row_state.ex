@@ -2,7 +2,7 @@ defmodule Game.WaitingForRowState do
   @behaviour Game.State
 
   alias Game.{
-    PlayingState,
+    ProcessingRoundState,
     AlreadyStartedError,
     WaitingForRowError,
     RowSelectionError
@@ -23,7 +23,7 @@ defmodule Game.WaitingForRowState do
       game
       |> Game.set_waiting_for(nil)
       |> Game.set_chosen_row_id(row_id)
-      |> Game.set_state(PlayingState)
+      |> Game.set_state(ProcessingRoundState)
     end
   end
 end

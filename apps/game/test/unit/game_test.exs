@@ -14,7 +14,8 @@ defmodule GameTest do
     InvalidSelectionError,
     MissingSelectionError,
     RowSelectionError,
-    GameOverError
+    GameOverError,
+    IllegalSelectionError
   }
 
   #
@@ -301,6 +302,14 @@ defmodule GameTest do
       assert %{r1: [101], r2: [11, 1], r3: [103], r4: [104]} == Game.get_table(game)
       assert 0 == Game.get_score(game, "p2")
       assert 1 == Game.get_score(game, "p1")
+    end
+
+    @tag game: %Game{deck: 1..100, table: Table.new([101, 102, 103, 104])}
+    test "given an executable round when a player selects a card after a row was selected then an error is returned", context do
+      %IllegalSelectionError{} = context.game
+      ~> Game.play_round
+      ~> Game.choose_row("p1", :r3)
+      ~> Game.select("p1", 2)
     end
   end
 

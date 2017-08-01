@@ -5,16 +5,13 @@ defmodule Game.PlayingState do
 
   alias Game.{
     Player,
-    Table,
-    GameOverState,
+    ProcessingRoundState,
     AlreadyStartedError,
     NotParticipatingError,
     InvalidSelectionError,
     MissingSelectionError,
     UnexpectedRowSelectionError
   }
-
-  alias Game.WaitingForRowState
 
   def join(_game, _name), do: %AlreadyStartedError{}
 
@@ -41,41 +38,9 @@ defmodule Game.PlayingState do
     if Game.missing_selection?(game) do
       %MissingSelectionError{}
     else
-      game = do_play_round(game)
-      if Game.game_over?(game) do
-        Game.set_state(game, GameOverState)
-      else
-        game
-      end
-    end
-  end
-
-  defp do_play_round(%Game{chosen_row: rid} = game) when rid != nil do
-    with [{name, card} | _] <- Game.selections(game) do
-      {cards, table} = Table.replace_row(game.table, rid, card)
       game
-      |> Game.set_table(table)
-      |> Game.dispatch_gathered_cards(name, cards)
-      |> Game.set_chosen_row_id(nil)
-      |> do_play_round
-    end
-  end
-
-  defp do_play_round(game) do
-    with [{name, card} | _] <- Game.selections(game) do
-      case Table.put_card(game.table, card) do
-        {:error, :choose_row} ->
-          game
-          |> Game.set_state(WaitingForRowState)
-          |> Game.set_waiting_for(name)
-        {cards, table} ->
-          game
-          |> Game.set_table(table)
-          |> Game.dispatch_gathered_cards(name, cards)
-          |> do_play_round
-      end
-    else
-      [] -> game
+      |> Game.set_state(ProcessingRoundState)
+      |> Game.play_round
     end
   end
 

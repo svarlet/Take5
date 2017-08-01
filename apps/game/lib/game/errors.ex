@@ -45,3 +45,7 @@ end
 defmodule Game.GameOverError do
   defexception message: "The game is already over."
 end
+
+defmodule Game.IllegalSelectionError do
+  defexception message: "Selecting a card while processing the current round is not allowed."
+end
